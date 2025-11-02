@@ -14,12 +14,30 @@ class ResolucionController extends Controller
      */
     public function index()
     {
-        $solicitudes = Solicitud::where('estado_solicitud_id', 1) // Pendiente
-            ->with(['usuario', 'tipo'])
-            ->orderBy('fecha_envio', 'desc')
+        $usuario = Auth::user();
+
+        // 🧩 Obtener los IDs de los subordinados directos del jefe actual
+        $subordinadosIds = $usuario->subordinados()
+            ->pluck('id')
+            ->filter()
+            ->toArray();
+
+        // Si no tiene subordinados, devolver vista vacía
+        if (empty($subordinadosIds)) {
+            return view('resoluciones.index', [
+                'pendientes' => collect(),
+                'usuario' => $usuario
+            ]);
+        }
+
+        // 📨 Obtener solicitudes pendientes de revisión de esos subordinados
+        $pendientes = Solicitud::whereIn('user_id', $subordinadosIds)
+            ->where('estado_solicitud_id', 1) // 1 = Pendiente
+            ->with(['usuario', 'tipo', 'estado'])
+            ->orderByDesc('created_at')
             ->get();
 
-        return view('resoluciones.index', compact('solicitudes'));
+        return view('resoluciones.index', compact('pendientes', 'usuario'));
     }
 
     /**
@@ -34,10 +52,15 @@ class ResolucionController extends Controller
 
         $solicitud = Solicitud::findOrFail($id);
 
+        // ⚠️ Seguridad: solo el validador asignado o el admin pueden resolver
+        if ($solicitud->validador_id !== Auth::user()->id && Auth::user()->rol_id !== 1) {
+            abort(403, 'No tienes permiso para resolver esta solicitud.');
+        }
+
         $estado = $request->accion === 'aprobado' ? 3 : 4; // 3 = Aprobado, 4 = Rechazado
         $solicitud->update([
             'estado_solicitud_id' => $estado,
-            'validador_id' => Auth::id(),
+            'validador_id' => Auth::user()->id,
             'fecha_revision' => now(),
             'observaciones_validador' => $request->comentario,
             'firma_validador' => true,
@@ -45,7 +68,7 @@ class ResolucionController extends Controller
 
         Resolucion::create([
             'solicitud_id' => $solicitud->id,
-            'user_id' => Auth::id(),
+            'user_id' => Auth::user()->id,
             'accion' => $request->accion,
             'comentario' => $request->comentario,
         ]);

@@ -17,7 +17,7 @@
 
 <form action="{{ route('solicitudes.store') }}" method="POST">
     @csrf
-    <input type="hidden" name="tipo" value="sin_goce">
+    <input type="hidden" name="tipo_solicitud_id" value="2">
 
     <div class="row">
         <!-- Card Información -->
@@ -126,15 +126,15 @@
                                 <input
                                     type="number"
                                     class="form-control @error('dias') is-invalid @enderror"
-                                    id="dias"
-                                    name="dias"
+                                    id="dias_solicitados"
+                                    name="dias_solicitados"
                                     min="1"
                                     placeholder="Ej: 5"
-                                    value="{{ old('dias') }}"
+                                    value="{{ old('dias_solicitados') }}"
                                     required
                                 >
                                 <small class="text-muted">Solo días completos, no se permite medio día</small>
-                                @error('dias')
+                                @error('dias_solicitados')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -214,7 +214,7 @@
 </form>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const diasInput   = document.getElementById('dias');
+  const diasInput   = document.getElementById('dias_solicitados');
   const fechaDesde  = document.getElementById('fecha_desde');
   const fechaHasta  = document.getElementById('fecha_hasta');
 

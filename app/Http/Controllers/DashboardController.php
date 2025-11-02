@@ -44,10 +44,18 @@ class DashboardController extends Controller
 
             // 🔹 JEFATURA (Inspector General o similar)
             case 'jefe_directo':
-                $pendientes = Solicitud::where('validador_id', $usuario->id)
-                    ->whereHas('estado', fn($q) => $q->where('nombre', 'En revisión'))
-                    ->with(['usuario', 'tipo', 'estado'])
-                    ->get();
+                // 🔹 Obtener los IDs de los subordinados directos del jefe actual
+                $subordinadosIds = $usuario->subordinados()->pluck('id')->toArray();
+
+                // Si tiene subordinados, obtener sus solicitudes pendientes
+                $pendientes = collect();
+                if (!empty($subordinadosIds)) {
+                    $pendientes = Solicitud::whereIn('user_id', $subordinadosIds)
+                        ->where('estado_solicitud_id', 1) // 1 = Pendiente o En revisión
+                        ->with(['usuario', 'tipo', 'estado'])
+                        ->orderByDesc('created_at')
+                        ->get();
+                }
 
                 return view('dashboard.jefatura', compact('usuario', 'pendientes'));
 

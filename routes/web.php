@@ -48,8 +48,6 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     | FUNCIONARIO (docente o asistente)
     |--------------------------------------------------------------------------
-    | Puede crear, ver y revisar el historial de sus solicitudes.
-    |--------------------------------------------------------------------------
     */
     Route::middleware(['rol:funcionario'])->group(function () {
 
@@ -57,9 +55,18 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [SolicitudController::class, 'index'])->name('index');       // Listado personal
             Route::get('/crear/{tipo}', [SolicitudController::class, 'create'])->name('create'); // Formulario según tipo
             Route::post('/', [SolicitudController::class, 'store'])->name('store');      // Enviar solicitud
-            Route::get('/{id}', [SolicitudController::class, 'show'])->name('show');     // Ver detalle
+            // ⚠️ Aquí ya NO va el show
         });
     });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DETALLE DE SOLICITUD (accesible por jefatura, secretaria, admin o el propio usuario)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['auth'])->get('/solicitudes/{id}', [SolicitudController::class, 'show'])
+        ->name('solicitudes.show');
 
 
     /*

@@ -11,16 +11,37 @@
 
     <div class="card shadow-sm border-0 rounded-3 mb-4">
         <div class="card-body">
-            <div class="row mb-3">
+            <div class="row mb-3 align-items-center">
                 <div class="col-md-6">
                     <h6 class="text-muted mb-1">Tipo de solicitud</h6>
-                    <p class="fw-semibold">Permiso con goce de sueldo</p>
+                    <p class="fw-semibold">{{ $solicitud->tipo->nombre }}</p>
                 </div>
                 <div class="col-md-3">
                     <h6 class="text-muted mb-1">Estado</h6>
-                    <span class="badge bg-success">Aprobado</span>
+                    <span class="badge
+                        @if($solicitud->estado->nombre === 'Aprobado') bg-success
+                        @elseif($solicitud->estado->nombre === 'En revisión') bg-warning text-dark
+                        @elseif($solicitud->estado->nombre === 'Pendiente') bg-secondary
+                        @elseif($solicitud->estado->nombre === 'Rechazado') bg-danger
+                        @else bg-light text-dark @endif">
+                        {{ $solicitud->estado->nombre }}
+                    </span>
                 </div>
                 <div class="col-md-3 text-end">
+                    @php
+                        $rol = strtolower(auth()->user()->rol?->nombre ?? '');
+                        $rutaVolver = match($rol) {
+                            'funcionario' => route('solicitudes.index'),
+                            'jefe_directo' => route('dashboard'),
+                            'secretaria' => route('reportes.mensuales'),
+                            'admin' => route('dashboard'),
+                            default => route('dashboard'),
+                        };
+                    @endphp
+
+                    <a href="{{ $rutaVolver }}" class="btn btn-outline-primary btn-sm me-2">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
                     <a href="#" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-printer"></i> Imprimir
                     </a>

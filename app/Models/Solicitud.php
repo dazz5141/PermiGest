@@ -32,6 +32,22 @@ class Solicitud extends Model
         'token_validacion',
     ];
 
+    protected $casts = [
+        'fecha_desde'           => 'date',
+        'fecha_hasta'           => 'date',
+        'hora_desde'            => 'datetime:H:i',  // si es TIME en la DB funciona bien como string también
+        'hora_hasta'            => 'datetime:H:i',
+        'fecha_envio'           => 'datetime',
+        'fecha_revision'        => 'datetime',
+        'firma_validador'       => 'boolean',
+        'dias_solicitados'      => 'float',
+        'estado_solicitud_id'   => 'integer',
+        'tipo_solicitud_id'     => 'integer',
+        'parentesco_id'         => 'integer',
+        'user_id'               => 'integer',
+        'validador_id'          => 'integer',
+    ];
+
     // 🔹 Relaciones
 
     public function usuario(): BelongsTo

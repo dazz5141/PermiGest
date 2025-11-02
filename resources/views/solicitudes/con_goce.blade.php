@@ -17,7 +17,7 @@
 
 <form action="{{ route('solicitudes.store') }}" method="POST">
     @csrf
-    <input type="hidden" name="tipo" value="con_goce">
+    <input type="hidden" name="tipo_solicitud_id" value="1">
 
     <div class="row">
         <!-- Card Información -->
@@ -71,19 +71,19 @@
                     <div class="row text-center g-3">
                         <div class="col-4">
                             <div class="p-3 bg-light rounded-3">
-                                <div class="display-5 fw-bold text-primary mb-2">6</div>
+                                <div class="display-5 fw-bold text-primary mb-2">{{ $totalDias }}</div>
                                 <p class="text-muted small mb-0">Días totales</p>
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="p-3 bg-light rounded-3">
-                                <div class="display-5 fw-bold text-warning mb-2">2</div>
+                                <div class="display-5 fw-bold text-warning mb-2">{{ $diasTomados }}</div>
                                 <p class="text-muted small mb-0">Días tomados</p>
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="p-3 bg-light rounded-3">
-                                <div class="display-5 fw-bold text-success mb-2">4</div>
+                                <div class="display-5 fw-bold text-success mb-2">{{ $diasDisponibles }}</div>
                                 <p class="text-muted small mb-0">Días disponibles</p>
                             </div>
                         </div>
@@ -133,14 +133,14 @@
                                         step="0.5"
                                         min="0.5"
                                         class="form-control"
-                                        id="dias"
-                                        name="dias"
+                                        id="dias_solicitados"
+                                        name="dias_solicitados"
                                         placeholder="Ej: 0.5, 1, 2, 3..."
-                                        value="{{ old('dias') }}"
+                                        value="{{ old('dias_solicitados') }}"
                                         required
                                         oninput="actualizarCamposJornada()">
                                     <small class="text-muted">Use 0.5 para medio día</small>
-                                    @error('dias')
+                                    @error('dias_solicitados')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -176,19 +176,21 @@
                                     @enderror
                                 </div>
 
-                                <div class="col-md-6 mb-3">
-                                    <label for="fecha_hasta" class="form-label fw-semibold">
-                                        Hasta <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="date"
-                                        class="form-control @error('fecha_hasta') is-invalid @enderror"
-                                        id="fecha_hasta"
-                                        name="fecha_hasta"
-                                        value="{{ old('fecha_hasta') }}"
-                                        required>
-                                    @error('fecha_hasta')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                <div class="col-md-6 mb-3" id="fechaHastaContainer">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="fecha_hasta" class="form-label fw-semibold">
+                                            Hasta <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="date"
+                                            class="form-control @error('fecha_hasta') is-invalid @enderror"
+                                            id="fecha_hasta"
+                                            name="fecha_hasta"
+                                            value="{{ old('fecha_hasta') }}"
+                                            required>
+                                        @error('fecha_hasta')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
                             </div>
 
@@ -261,7 +263,7 @@
 </form>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const diasInput = document.getElementById('dias');
+    const diasInput = document.getElementById('dias_solicitados');
     const jornadaSelect = document.getElementById('jornada');
     const fechaDesdeInput = document.getElementById('fecha_desde');
     const fechaHastaInput = document.getElementById('fecha_hasta');
@@ -337,6 +339,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Inicial
     actualizarCampos();
+
+    // 🚨 Validación si excede días disponibles
+    const diasDisponibles = {{ $diasDisponibles }};
+    diasInput.addEventListener('input', () => {
+        const valor = parseFloat(diasInput.value || 0);
+        if (valor > diasDisponibles) {
+            diasInput.classList.add('is-invalid');
+            diasInput.setCustomValidity('No tiene suficientes días disponibles.');
+        } else {
+            diasInput.classList.remove('is-invalid');
+            diasInput.setCustomValidity('');
+        }
+    });
 });
 </script>
 

@@ -43,6 +43,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'activo' => 'boolean',
+        'password' => 'hashed',
     ];
 
     /**
