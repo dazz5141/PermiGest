@@ -17,7 +17,7 @@
 
 <form action="{{ route('solicitudes.store') }}" method="POST">
     @csrf
-    <input type="hidden" name="tipo" value="defuncion">
+    <input type="hidden" name="tipo_solicitud_id" value="3"> {{-- ID real del tipo Defunción --}}
 
     <div class="row">
         <!-- Card Información -->
@@ -78,16 +78,19 @@
 
                     <div class="mb-3">
                         <label for="parentesco" class="form-label fw-semibold">Parentesco con el fallecido <span class="text-danger">*</span></label>
-                        <select class="form-select @error('parentesco') is-invalid @enderror" id="parentesco" name="parentesco" required>
+                        <select class="form-select @error('parentesco_id') is-invalid @enderror"
+                                id="parentesco_id"
+                                name="parentesco_id"
+                                required>
                             <option value="">Seleccione el parentesco...</option>
-                            <option value="hijo" {{ old('parentesco') == 'hijo' ? 'selected' : '' }}>Hijo(a)</option>
-                            <option value="conyuge" {{ old('parentesco') == 'conyuge' ? 'selected' : '' }}>Cónyuge o conviviente civil</option>
-                            <option value="padre_madre" {{ old('parentesco') == 'padre_madre' ? 'selected' : '' }}>Padre o madre</option>
-                            <option value="abuelo" {{ old('parentesco') == 'abuelo' ? 'selected' : '' }}>Abuelo(a)</option>
-                            <option value="hermano" {{ old('parentesco') == 'hermano' ? 'selected' : '' }}>Hermano(a)</option>
-                            <option value="otro" {{ old('parentesco') == 'otro' ? 'selected' : '' }}>Otro familiar directo</option>
+                            @foreach ($parentescos as $parentesco)
+                                <option value="{{ $parentesco->id }}"
+                                    {{ old('parentesco_id') == $parentesco->id ? 'selected' : '' }}>
+                                    {{ $parentesco->nombre }}
+                                </option>
+                            @endforeach
                         </select>
-                        @error('parentesco')
+                        @error('parentesco_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -97,8 +100,8 @@
                         <input
                             type="number"
                             class="form-control @error('dias') is-invalid @enderror"
-                            id="dias"
-                            name="dias"
+                            id="dias_solicitados"
+                            name="dias_solicitados"
                             min="1"
                             max="7"
                             placeholder="Ej: 3"
