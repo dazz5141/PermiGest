@@ -11,6 +11,7 @@ use App\Models\EstadoSolicitud;
 use App\Models\Parentesco;
 use App\Models\TipoVario;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class SolicitudController extends Controller
 {
@@ -151,7 +152,7 @@ class SolicitudController extends Controller
     {
         $usuario = auth()->user();
 
-        $solicitud = Solicitud::with(['usuario', 'tipo', 'estado', 'resoluciones'])
+        $solicitud = Solicitud::with(['usuario', 'tipo', 'estado', 'resoluciones','ultimaResolucion'])
             ->findOrFail($id);
 
         // Control de acceso
@@ -171,5 +172,26 @@ class SolicitudController extends Controller
 
         // Si no cumple ninguna condición
         abort(403, 'Acceso no autorizado.');
+    }
+
+    public function pdf(Solicitud $solicitud)
+    {
+        // Regla mínima: admin/secretaria/inspector_general pueden imprimir
+        $user = auth()->user();
+        $rol  = strtolower($user->rol->nombre ?? '');
+
+        if (!in_array($rol, ['administrador','secretaria','inspector_general','jefe_directo'])) {
+            abort(403, 'No tienes permiso para imprimir esta ficha.');
+        }
+
+        // Cargamos relaciones útiles para la ficha
+        $solicitud->load(['usuario', 'validador','tipo','estado','ultimaResolucion',]);
+
+        $pdf = Pdf::loadView('solicitudes.pdf', [
+            'solicitud' => $solicitud,
+        ])->setPaper('letter'); // A4 o letter según prefieras
+
+        // stream = abre en el navegador; download() si quieres descarga directa
+        return $pdf->stream('permiso_'.$solicitud->id.'.pdf');
     }
 }

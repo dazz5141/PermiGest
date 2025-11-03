@@ -74,6 +74,13 @@
                                             <i class="bi bi-eye"></i> Ver
                                         </a>
 
+                                        {{-- Botón Imprimir ficha --}}
+                                        <a href="{{ route('solicitudes.pdf', $solicitud->id) }}" 
+                                        target="_blank" 
+                                        class="btn btn-sm btn-outline-secondary me-1">
+                                        <i class="bi bi-printer"></i> Imprimir
+                                        </a>
+
                                         {{-- Botón Aprobar --}}
                                         <button type="button"
                                             class="btn btn-sm btn-success me-1"

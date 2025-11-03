@@ -55,7 +55,6 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [SolicitudController::class, 'index'])->name('index');       // Listado personal
             Route::get('/crear/{tipo}', [SolicitudController::class, 'create'])->name('create'); // Formulario según tipo
             Route::post('/', [SolicitudController::class, 'store'])->name('store');      // Enviar solicitud
-            // ⚠️ Aquí ya NO va el show
         });
     });
 
@@ -67,7 +66,11 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::middleware(['auth'])->get('/solicitudes/{id}', [SolicitudController::class, 'show'])
         ->name('solicitudes.show');
-
+        
+    // Ficha PDF imprimible de la solicitud
+    Route::get('/solicitudes/{solicitud}/pdf', [SolicitudController::class, 'pdf'])
+        ->name('solicitudes.pdf')
+        ->middleware('auth');
 
     /*
     |--------------------------------------------------------------------------

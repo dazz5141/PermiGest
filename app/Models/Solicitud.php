@@ -79,4 +79,9 @@ class Solicitud extends Model
     {
         return $this->hasMany(Resolucion::class, 'solicitud_id');
     }
+
+    public function ultimaResolucion()
+    {
+        return $this->hasOne(Resolucion::class)->latestOfMany();
+    }
 }
