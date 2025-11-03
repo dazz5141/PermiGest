@@ -29,6 +29,31 @@
         </script>
     @endif
 
+    {{-- Botón de Reporte Mensual --}}
+    <div class="d-flex justify-content-end align-items-center mb-3" style="gap:.5rem;">
+        <form action="{{ route('reportes.mensual') }}" method="GET" target="_blank" class="d-flex align-items-center" style="gap:.5rem;">
+            <div class="flex-shrink-0">
+            <select name="mes" class="form-select form-select-sm" style="min-width: 160px;">
+                @for($i = 1; $i <= 12; $i++)
+                <option value="{{ $i }}" {{ (int)$i === (int)date('m') ? 'selected' : '' }}>
+                    {{ \Carbon\Carbon::create()->month($i)->locale('es')->monthName }}
+                </option>
+                @endfor
+            </select>
+            </div>
+            <div class="flex-shrink-0">
+            <select name="año" class="form-select form-select-sm" style="min-width: 100px;">
+                @for($a = date('Y'); $a >= date('Y') - 3; $a--)
+                <option value="{{ $a }}" {{ (int)$a === (int)date('Y') ? 'selected' : '' }}>{{ $a }}</option>
+                @endfor
+            </select>
+            </div>
+            <button type="submit" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-printer me-1"></i> Imprimir resumen mensual
+            </button>
+        </form>
+    </div>
+
     {{-- Tabla de solicitudes pendientes --}}
     <div class="card shadow-sm border-0 rounded-4">
         <div class="card-header bg-white py-3">

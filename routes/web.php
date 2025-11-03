@@ -8,6 +8,7 @@ use App\Http\Controllers\ResolucionController;
 use App\Http\Controllers\TipoSolicitudController;
 use App\Http\Controllers\EstadoSolicitudController;
 use App\Http\Controllers\ParentescoController;
+use App\Http\Controllers\ReporteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,11 +67,21 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::middleware(['auth'])->get('/solicitudes/{id}', [SolicitudController::class, 'show'])
         ->name('solicitudes.show');
-        
+
     // Ficha PDF imprimible de la solicitud
     Route::get('/solicitudes/{solicitud}/pdf', [SolicitudController::class, 'pdf'])
         ->name('solicitudes.pdf')
         ->middleware('auth');
+
+    /*
+    |--------------------------------------------------------------------------
+    | JEFATURA (Secretaria / Inspector General / Director) Reportes mensuales
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('reportes')->middleware(['auth'])->name('reportes.')->group(function () {
+        Route::get('/mensual', [ReporteController::class, 'reporteMensual'])
+            ->name('mensual');
+    });
 
     /*
     |--------------------------------------------------------------------------
