@@ -84,9 +84,7 @@ class SolicitudController extends Controller
     if ($request->tipo_solicitud_id == 3) {
         $rules['parentesco_id']    = 'required|exists:parentescos,id';
         $rules['dias_solicitados'] = 'required|numeric|min:1|max:7';
-        // motivo es opcional
-    } else {
-        $rules['motivo'] = 'required|string|max:1000';
+        $rules['motivo']           = 'nullable|string|max:1000';
     }
 
     // Ejecución de validación con las reglas completas

@@ -105,7 +105,7 @@
                             min="1"
                             max="7"
                             placeholder="Ej: 3"
-                            value="{{ old('dias') }}"
+                            value="{{ old('dias_solicitados') }}"
                             required
                         >
                         <small class="text-muted">Según normativa: hijo/cónyuge (7 días), padres (7 días), otros (1-3 días)</small>
