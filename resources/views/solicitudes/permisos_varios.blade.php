@@ -17,7 +17,7 @@
 
 <form action="{{ route('solicitudes.store') }}" method="POST">
     @csrf
-    <input type="hidden" name="tipo" value="varios">
+    <input type="hidden" name="tipo_solicitud_id" value="4"> {{-- ID tipo "Permisos varios" --}}
 
     <div class="row">
         <!-- Card Información -->
@@ -70,16 +70,19 @@
                 <div class="card-body p-4">
                     <div class="mb-3">
                         <label for="tipo_solicitud" class="form-label fw-semibold">Tipo de solicitud <span class="text-danger">*</span></label>
-                        <select class="form-select @error('tipo_solicitud') is-invalid @enderror" id="tipo_solicitud" name="tipo_solicitud" required>
+                        <select class="form-select @error('tipo_vario_id') is-invalid @enderror" 
+                                id="tipo_vario_id" 
+                                name="tipo_vario_id" 
+                                required>
                             <option value="">Seleccione el tipo de permiso...</option>
-                            <option value="comision_servicio" {{ old('tipo_solicitud') == 'comision_servicio' ? 'selected' : '' }}>Comisión de servicio</option>
-                            <option value="capacitacion" {{ old('tipo_solicitud') == 'capacitacion' ? 'selected' : '' }}>Capacitación o perfeccionamiento</option>
-                            <option value="representacion" {{ old('tipo_solicitud') == 'representacion' ? 'selected' : '' }}>Representación institucional</option>
-                            <option value="tramite_personal" {{ old('tipo_solicitud') == 'tramite_personal' ? 'selected' : '' }}>Trámite personal</option>
-                            <option value="atencion_medica" {{ old('tipo_solicitud') == 'atencion_medica' ? 'selected' : '' }}>Atención médica</option>
-                            <option value="otro" {{ old('tipo_solicitud') == 'otro' ? 'selected' : '' }}>Otro</option>
+                            @foreach ($tipos_varios as $tipo)
+                                <option value="{{ $tipo->id }}" 
+                                    {{ old('tipo_vario_id') == $tipo->id ? 'selected' : '' }}>
+                                    {{ $tipo->nombre }}
+                                </option>
+                            @endforeach
                         </select>
-                        @error('tipo_solicitud')
+                        @error('tipo_vario_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -114,23 +117,6 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <div class="form-check form-switch">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                role="switch"
-                                id="incluir_viatico"
-                                name="incluir_viatico"
-                                {{ old('incluir_viatico') ? 'checked' : '' }}
-                            >
-                            <label class="form-check-label fw-semibold" for="incluir_viatico">
-                                Incluir solicitud de viático
-                            </label>
-                        </div>
-                        <small class="text-muted">Active esta opción si requiere viático para traslados o alimentación</small>
                     </div>
 
                     <div class="mb-3">

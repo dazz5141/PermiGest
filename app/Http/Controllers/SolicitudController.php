@@ -9,6 +9,8 @@ use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
 use App\Models\EstadoSolicitud;
 use App\Models\Parentesco;
+use App\Models\TipoVario;
+use Carbon\Carbon;
 
 class SolicitudController extends Controller
 {
@@ -56,9 +58,16 @@ class SolicitudController extends Controller
 
         $diasDisponibles = max($totalDias - $diasTomados, 0);
 
+        $tipos_varios = [];
+
+        if ($tipo === 'varios') {
+            $tipos_varios = TipoVario::orderBy('nombre')->get();
+        }
+
         return view($vistas[$tipo], compact(
             'tipos',
             'parentescos',
+            'tipos_varios',
             'usuario',
             'totalDias',
             'diasTomados',
@@ -71,24 +80,38 @@ class SolicitudController extends Controller
      */
     public function store(Request $request)
     {
-    $usuario = Auth::user();
+        $usuario = Auth::user();
 
-    // Validación dinámica según tipo de solicitud
-    $rules = [
-        'tipo_solicitud_id' => 'required|exists:tipos_solicitud,id',
-        'fecha_desde'       => 'required|date',
-        'fecha_hasta'       => 'required|date|after_or_equal:fecha_desde',
-    ];
+        // Validación dinámica según tipo de solicitud
+        $rules = [
+            'tipo_solicitud_id' => 'required|exists:tipos_solicitud,id',
+            'fecha_desde'       => 'required|date',
+            'fecha_hasta'       => 'required|date|after_or_equal:fecha_desde',
+            'hora_desde'        => 'nullable|date_format:H:i',
+            'hora_hasta'        => 'nullable|date_format:H:i|after:hora_desde',
+        ];
 
-    // Si es tipo Defunción (ej: ID 3)
-    if ($request->tipo_solicitud_id == 3) {
-        $rules['parentesco_id']    = 'required|exists:parentescos,id';
-        $rules['dias_solicitados'] = 'required|numeric|min:1|max:7';
-        $rules['motivo']           = 'nullable|string|max:1000';
-    }
+        // Si es tipo Defunción (ej: ID 3)
+        if ($request->tipo_solicitud_id == 3) {
+            $rules['parentesco_id']    = 'required|exists:parentescos,id';
+            $rules['dias_solicitados'] = 'nullable|numeric|min:1|max:7';
+            $rules['motivo']           = 'nullable|string|max:1000';
+        }
+        // Si es tipo Permisos Varios (ej: ID 4)
+        elseif ($request->tipo_solicitud_id == 4) {
+            $rules['tipo_vario_id'] = 'required|exists:tipos_varios,id';
+            $rules['motivo'] = 'required|string|max:1000';
+        }
 
-    // Ejecución de validación con las reglas completas
-    $request->validate($rules);
+        // Ejecución de validación con las reglas completas
+        $request->validate($rules);
+
+        // Calcular días solicitados automáticamente
+        $diasSolicitados = null;
+        if ($request->filled('fecha_desde') && $request->filled('fecha_hasta')) {
+            $diasSolicitados = Carbon::parse($request->fecha_desde)
+                ->diffInDays(Carbon::parse($request->fecha_hasta)) + 1;
+        }
 
         // Buscar jefe directo dinámicamente (rol_id = 3)
         $jefe = \App\Models\User::where('rol_id', 3)->first();
@@ -98,10 +121,10 @@ class SolicitudController extends Controller
             $jefe = \App\Models\User::find(3);
         }
 
-        // Creamos la solicitud con validador_id asignado
+        // Crear la solicitud con cálculo automático de días
         Solicitud::create([
             'user_id' => $usuario->id,
-            'validador_id' => $jefe?->id, // 👈 aseguramos que se envíe
+            'validador_id' => $jefe?->id, 
             'tipo_solicitud_id' => $request->tipo_solicitud_id,
             'estado_solicitud_id' => 1, // Pendiente
             'parentesco_id' => $request->parentesco_id,
@@ -110,11 +133,11 @@ class SolicitudController extends Controller
             'fecha_hasta' => $request->fecha_hasta,
             'hora_desde' => $request->hora_desde,
             'hora_hasta' => $request->hora_hasta,
-            'dias_solicitados' => $request->dias_solicitados,
+            'dias_solicitados' => $diasSolicitados, 
             'jornada' => $request->jornada,
-            'tipo_varios' => $request->tipo_varios,
+            'tipo_vario_id' => $request->tipo_vario_id,
             'fecha_envio' => now(),
-            'token_validacion' => \Illuminate\Support\Str::uuid(),
+            'token_validacion' => Str::uuid(),
         ]);
 
         return redirect()->route('solicitudes.index')

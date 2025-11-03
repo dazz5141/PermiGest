@@ -22,7 +22,6 @@ return new class extends Migration
             $table->time('hora_hasta')->nullable();
             $table->decimal('dias_solicitados', 4, 1)->nullable();
             $table->string('jornada', 20)->nullable();
-            $table->string('tipo_varios', 100)->nullable();
             $table->text('observaciones')->nullable();
 
             // Aprobación

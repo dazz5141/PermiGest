@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             TiposSolicitudSeeder::class,
             EstadosSolicitudSeeder::class,
             ParentescosSeeder::class,
+            TiposVariosSeeder::class,
         ]);
     }
 }
