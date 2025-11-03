@@ -29,30 +29,41 @@
                         Información del solicitante
                     </h5>
                 </div>
+
                 <div class="card-body p-4">
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-muted small">RUT</label>
-                        <p class="form-control-plaintext fw-semibold">{{ Auth::user()->rut ?? '12.345.678-9' }}</p>
+                        <p class="form-control-plaintext fw-semibold">{{ Auth::user()->run ?? '—' }}</p>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-muted small">Nombre completo</label>
-                        <p class="form-control-plaintext fw-semibold">{{ Auth::user()->name ?? 'Juan Pérez González' }}</p>
+                        <p class="form-control-plaintext fw-semibold">
+                            {{ Auth::user()->nombres }} {{ Auth::user()->apellidos }}
+                        </p>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-muted small">Correo institucional</label>
-                        <p class="form-control-plaintext">{{ Auth::user()->email ?? 'juan.perez@institucion.cl' }}</p>
+                        <p class="form-control-plaintext">
+                            {{ Auth::user()->correo_institucional ?? '—' }}
+                        </p>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-muted small">Cargo</label>
-                        <p class="form-control-plaintext">{{ Auth::user()->cargo ?? 'Docente de Matemáticas' }}</p>
+                        <p class="form-control-plaintext">
+                            {{ Auth::user()->cargo ?? '—' }}
+                        </p>
                     </div>
 
                     <div class="mb-0">
                         <label class="form-label fw-semibold text-muted small">Jefe directo</label>
-                        <p class="form-control-plaintext">{{ Auth::user()->jefe ?? 'María López Sánchez' }}</p>
+                        <p class="form-control-plaintext">
+                            {{ Auth::user()->jefeDirecto
+                                ? Auth::user()->jefeDirecto->nombres . ' ' . Auth::user()->jefeDirecto->apellidos . ' — ' . Auth::user()->jefeDirecto->cargo
+                                : '—' }}
+                        </p>
                     </div>
                 </div>
             </div>

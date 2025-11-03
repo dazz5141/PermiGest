@@ -3,7 +3,7 @@
         <div class="row">
             <div class="col-12 text-center">
                 <p class="text-muted small mb-0">
-                    © 2025 PermiGest Escolar – Desarrollado con Laravel & Bootstrap 5
+                    © 2025 PermiGest Escolar – Todos los derechos reservados.
                 </p>
             </div>
         </div>

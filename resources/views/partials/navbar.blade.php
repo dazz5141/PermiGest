@@ -13,7 +13,14 @@
             <div class="dropdown">
                 <button class="btn btn-link text-dark dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-person-circle fs-4 me-2"></i>
-                    <span class="d-none d-md-inline">Usuario</span>
+                    <div class="text-start">
+                        <div class="fw-semibold d-none d-md-block">
+                            {{ auth()->user()->nombres }} {{ auth()->user()->apellidos }}
+                        </div>
+                        <div class="text-muted small d-none d-md-block">
+                            {{ auth()->user()->cargo ?? 'Usuario' }}
+                        </div>
+                    </div>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                     <li>
