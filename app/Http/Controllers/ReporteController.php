@@ -18,7 +18,7 @@ class ReporteController extends Controller
         $rol = strtolower($usuario->rol?->nombre ?? '');
 
         // Solo roles permitidos
-        if (!in_array($rol, ['administrador', 'secretaria', 'inspector_general', 'jefe_directo'])) {
+        if (!in_array($rol, ['admin', 'secretaria', 'inspector_general', 'jefe_directo'])) {
             abort(403, 'Acceso no autorizado.');
         }
 

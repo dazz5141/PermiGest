@@ -16,7 +16,7 @@ class ResolucionController extends Controller
     {
         $usuario = Auth::user();
 
-        // 🧩 Obtener los IDs de los subordinados directos del jefe actual
+        // Obtener los IDs de los subordinados directos del jefe actual
         $subordinadosIds = $usuario->subordinados()
             ->pluck('id')
             ->filter()
@@ -30,7 +30,7 @@ class ResolucionController extends Controller
             ]);
         }
 
-        // 📨 Obtener solicitudes pendientes de revisión de esos subordinados
+        // Obtener solicitudes pendientes de revisión de esos subordinados
         $pendientes = Solicitud::whereIn('user_id', $subordinadosIds)
             ->where('estado_solicitud_id', 1) // 1 = Pendiente
             ->with(['usuario', 'tipo', 'estado'])
@@ -52,7 +52,7 @@ class ResolucionController extends Controller
 
         $solicitud = Solicitud::findOrFail($id);
 
-        // ⚠️ Seguridad: solo el validador asignado o el admin pueden resolver
+        // Seguridad: solo el validador asignado o el admin pueden resolver
         if ($solicitud->validador_id !== Auth::user()->id && Auth::user()->rol_id !== 1) {
             abort(403, 'No tienes permiso para resolver esta solicitud.');
         }

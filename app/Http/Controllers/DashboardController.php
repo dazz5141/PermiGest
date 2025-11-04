@@ -16,7 +16,7 @@ class DashboardController extends Controller
         // Según el rol, mostramos un dashboard diferente
         switch ($usuario->rol?->nombre ?? '') {
 
-            // 🔹 ADMINISTRADOR
+            // ADMINISTRADOR
             case 'admin':
                 $totalUsuarios     = User::count();
                 $totalSolicitudes  = Solicitud::count();
@@ -33,16 +33,27 @@ class DashboardController extends Controller
                     'pendientes'
                 ));
 
-            // 🔹 SECRETARÍA
+            // SECRETARÍA
             case 'secretaria':
-                // Secretaria ve resumen global y genera reportes mensuales
+                // Secretaría: resumen general + listado de solicitudes
                 $totalSolicitudes = Solicitud::count();
                 $pendientes = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'En revisión'))->count();
                 $aprobadas = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'Aprobada'))->count();
 
-                return view('dashboard.secretaria', compact('usuario', 'totalSolicitudes', 'pendientes', 'aprobadas'));
+                // Agregamos el listado de todas las solicitudes con relaciones
+                $solicitudes = Solicitud::with(['usuario', 'tipo', 'estado'])
+                    ->orderByDesc('created_at')
+                    ->get();
 
-            // 🔹 JEFATURA (Inspector General o similar)
+                return view('dashboard.secretaria', compact(
+                    'usuario', 
+                    'totalSolicitudes', 
+                    'pendientes', 
+                    'aprobadas',
+                    'solicitudes' 
+                ));
+
+            // JEFATURA (Inspector General o similar)
             case 'jefe_directo':
                 // 🔹 Obtener los IDs de los subordinados directos del jefe actual
                 $subordinadosIds = $usuario->subordinados()->pluck('id')->toArray();
@@ -59,7 +70,7 @@ class DashboardController extends Controller
 
                 return view('dashboard.jefatura', compact('usuario', 'pendientes'));
 
-            // 🔹 FUNCIONARIO (Docente o Asistente)
+            // FUNCIONARIO (Docente o Asistente)
             default:
                 $total = $usuario->solicitudes()->count();
                 $enRevision = $usuario->solicitudes()->whereHas('estado', fn($q) => $q->where('nombre', 'En revisión'))->count();

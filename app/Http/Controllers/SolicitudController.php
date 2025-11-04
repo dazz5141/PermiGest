@@ -107,11 +107,23 @@ class SolicitudController extends Controller
         // Ejecución de validación con las reglas completas
         $request->validate($rules);
 
-        // Calcular días solicitados automáticamente
+        // Cálculo de días solicitados
         $diasSolicitados = null;
-        if ($request->filled('fecha_desde') && $request->filled('fecha_hasta')) {
+
+        // Si el usuario escribió manualmente los días (por ejemplo 0.5), se respeta
+        if ($request->filled('dias_solicitados')) {
+            $diasSolicitados = floatval($request->dias_solicitados);
+        } 
+        // Si no los ingresó, se calcula automáticamente
+        elseif ($request->filled('fecha_desde') && $request->filled('fecha_hasta')) {
             $diasSolicitados = Carbon::parse($request->fecha_desde)
                 ->diffInDays(Carbon::parse($request->fecha_hasta)) + 1;
+        }
+
+        // Ajuste si la jornada indica medio día
+        $jornada = strtolower(trim($request->jornada));
+        if (preg_match('/medio|media|mañana|tarde|mediod/i', $jornada)) {
+            $diasSolicitados = 0.5;
         }
 
         // Buscar jefe directo dinámicamente (rol_id = 3)
@@ -180,7 +192,7 @@ class SolicitudController extends Controller
         $user = auth()->user();
         $rol  = strtolower($user->rol->nombre ?? '');
 
-        if (!in_array($rol, ['administrador','secretaria','inspector_general','jefe_directo'])) {
+        if (!in_array($rol, ['admin','secretaria','inspector_general','jefe_directo'])) {
             abort(403, 'No tienes permiso para imprimir esta ficha.');
         }
 

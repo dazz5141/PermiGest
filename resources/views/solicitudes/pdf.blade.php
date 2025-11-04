@@ -106,8 +106,8 @@
     </tr>
   </table>
 
-  <div class="small mt-2">
-    Código interno: {{ $solicitud->id }} · Generado el {{ now()->format('d-m-Y H:i') }}
-  </div>
+    <div class="small mt-2 text-muted">
+        Ficha N° {{ str_pad($solicitud->id, 4, '0', STR_PAD_LEFT) }} · Generado el {{ now()->format('d-m-Y H:i') }}
+    </div>
 </body>
 </html>

@@ -73,43 +73,77 @@
 
         <!-- Card Días disponibles -->
         <div class="col-lg-6 mb-4">
-            <div class="card rounded-3 shadow-sm border-0">
+            <div class="card rounded-3 shadow-sm border-0 h-100">
                 <div class="card-header bg-white border-bottom py-3">
                     <h5 class="mb-0 fw-semibold">
                         <i class="bi bi-calendar-check me-2 text-primary"></i>
                         Días disponibles
                     </h5>
                 </div>
-                <div class="card-body p-4">
-                    <div class="row text-center g-3">
-                        <div class="col-4">
-                            <div class="p-3 bg-light rounded-3">
-                                <div class="display-5 fw-bold text-primary mb-2">{{ $totalDias }}</div>
-                                <p class="text-muted small mb-0">Días totales</p>
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="row text-center g-3">
+                            <div class="col-4">
+                                <div class="p-3 bg-light rounded-3">
+                                    <div class="display-5 fw-bold text-primary mb-2">{{ $totalDias }}</div>
+                                    <p class="text-muted small mb-0">Días totales</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 bg-light rounded-3">
+                                    <div class="display-5 fw-bold text-warning mb-2">{{ $diasTomados }}</div>
+                                    <p class="text-muted small mb-0">Días tomados</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 bg-light rounded-3">
+                                    <div class="display-5 fw-bold text-success mb-2">{{ $diasDisponibles }}</div>
+                                    <p class="text-muted small mb-0">Días disponibles</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-4">
-                            <div class="p-3 bg-light rounded-3">
-                                <div class="display-5 fw-bold text-warning mb-2">{{ $diasTomados }}</div>
-                                <p class="text-muted small mb-0">Días tomados</p>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="p-3 bg-light rounded-3">
-                                <div class="display-5 fw-bold text-success mb-2">{{ $diasDisponibles }}</div>
-                                <p class="text-muted small mb-0">Días disponibles</p>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="alert alert-info mt-4 mb-0" role="alert">
-                        <i class="bi bi-info-circle me-2"></i>
-                        <small>Puede solicitar medio día (mañana o tarde) o días completos según sus necesidades.</small>
+                        <div class="alert alert-info mt-4 mb-3" role="alert">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <small>Puede solicitar medio día (mañana o tarde) o días completos según sus necesidades.</small>
+                        </div>
+
+                        <!-- 📊 Barra de progreso dinámica con tooltip -->
+                        @php
+                            $porcentajeUso = ($diasTomados / max($totalDias, 1)) * 100;
+                            if ($porcentajeUso < 50) {
+                                $colorBarra = 'bg-success';
+                            } elseif ($porcentajeUso < 80) {
+                                $colorBarra = 'bg-warning';
+                            } else {
+                                $colorBarra = 'bg-danger';
+                            }
+                        @endphp
+
+                        <div class="text-center mb-3">
+                            <p class="small mb-2 fw-semibold text-muted">Uso de permisos</p>
+                            <div class="progress" style="height: 8px;" data-bs-toggle="tooltip" 
+                                title="Has utilizado {{ $diasTomados }} de {{ $totalDias }} días">
+                                <div class="progress-bar {{ $colorBarra }}" 
+                                    role="progressbar" 
+                                    style="width: {{ $porcentajeUso }}%;">
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                {{ round($porcentajeUso) }}% utilizados
+                            </small>
+                        </div>
+
+                        <!-- 🧾 Política institucional -->
+                        <div class="text-muted small border-top pt-3">
+                            <i class="bi bi-info-circle me-1 text-primary"></i>
+                            Los permisos deben solicitarse con al menos 
+                            <strong>48 horas de anticipación</strong> y contar con validación de la jefatura directa.
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Card Solicitud -->
     <div class="row">
@@ -368,4 +402,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<!-- Inicialización del tooltip (solo una vez en la vista) -->
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+@endpush
 @endsection
