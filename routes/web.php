@@ -9,6 +9,7 @@ use App\Http\Controllers\TipoSolicitudController;
 use App\Http\Controllers\EstadoSolicitudController;
 use App\Http\Controllers\ParentescoController;
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\TipoVarioController;
 
 /*
 |--------------------------------------------------------------------------

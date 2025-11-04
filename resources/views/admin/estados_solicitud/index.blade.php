@@ -19,14 +19,14 @@
                 <thead class="table-light">
                     <tr>
                         <th>Nombre</th>
-                        <th>Acciones</th>
+                        <th class="text-end pe-4">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($estados as $estado)
                         <tr>
                             <td>{{ $estado->nombre }}</td>
-                            <td>
+                            <td class="text-end pe-4">
                                 <a href="{{ route('estados.edit', $estado->id) }}" class="btn btn-sm btn-warning me-1">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
@@ -40,7 +40,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="3" class="text-center text-muted">No hay estados registrados</td></tr>
+                        <tr><td colspan="2" class="text-center text-muted">No hay estados registrados</td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -116,8 +116,15 @@ class SolicitudController extends Controller
         } 
         // Si no los ingresó, se calcula automáticamente
         elseif ($request->filled('fecha_desde') && $request->filled('fecha_hasta')) {
-            $diasSolicitados = Carbon::parse($request->fecha_desde)
-                ->diffInDays(Carbon::parse($request->fecha_hasta)) + 1;
+            $desde = Carbon::parse($request->fecha_desde)->startOfDay();
+            $hasta = Carbon::parse($request->fecha_hasta)->endOfDay();
+
+            // Si son el mismo día, cuenta como 1 día exacto (no 1.1)
+            if ($desde->isSameDay($hasta)) {
+                $diasSolicitados = 1;
+            } else {
+                $diasSolicitados = $desde->diffInDays($hasta) + 1;
+            }
         }
 
         // Ajuste si la jornada indica medio día

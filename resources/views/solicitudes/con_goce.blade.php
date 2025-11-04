@@ -223,21 +223,19 @@
                                     @enderror
                                 </div>
 
-                                <div class="col-md-6 mb-3" id="fechaHastaContainer">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="fecha_hasta" class="form-label fw-semibold">
-                                            Hasta <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="date"
-                                            class="form-control @error('fecha_hasta') is-invalid @enderror"
-                                            id="fecha_hasta"
-                                            name="fecha_hasta"
-                                            value="{{ old('fecha_hasta') }}"
-                                            required>
-                                        @error('fecha_hasta')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="fecha_hasta" class="form-label fw-semibold">
+                                        Hasta <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date"
+                                        class="form-control @error('fecha_hasta') is-invalid @enderror"
+                                        id="fecha_hasta"
+                                        name="fecha_hasta"
+                                        value="{{ old('fecha_hasta') }}"
+                                        required>
+                                    @error('fecha_hasta')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
 
@@ -334,6 +332,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const dias = parseFloat(diasInput.value || 0);
         const jornada = jornadaSelect.value;
         const fechaDesde = fechaDesdeInput.value;
+
+        // Habilitar o deshabilitar jornada según cantidad de días
+        if (dias === 0.5) {
+            jornadaSelect.disabled = false; // habilitar
+        } else {
+            jornadaSelect.disabled = true;  // deshabilitar
+            jornadaSelect.value = '';        // limpiar selección
+        }
 
         // Reset
         horaDesdeInput.value = '';

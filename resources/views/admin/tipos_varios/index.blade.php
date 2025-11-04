@@ -18,7 +18,6 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>#</th>
                         <th>Nombre</th>
                         <th>Descripción</th>
                         <th>Acciones</th>
@@ -27,7 +26,6 @@
                 <tbody>
                     @forelse($tipos as $tipo)
                         <tr>
-                            <td>{{ $tipo->id }}</td>
                             <td>{{ $tipo->nombre }}</td>
                             <td>{{ $tipo->descripcion ?? '—' }}</td>
                             <td>
