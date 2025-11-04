@@ -122,16 +122,29 @@ Route::middleware(['auth'])->group(function () {
         // Tipos de solicitud
         Route::get('/tipos-solicitud', [TipoSolicitudController::class, 'index'])->name('tipos.index');
         Route::post('/tipos-solicitud', [TipoSolicitudController::class, 'store'])->name('tipos.store');
+        Route::get('/tipos-solicitud/{id}/edit', [TipoSolicitudController::class, 'edit'])->name('tipos.edit');
+        Route::put('/tipos-solicitud/{id}', [TipoSolicitudController::class, 'update'])->name('tipos.update');
         Route::delete('/tipos-solicitud/{id}', [TipoSolicitudController::class, 'destroy'])->name('tipos.destroy');
 
         // Estados de solicitud
         Route::get('/estados-solicitud', [EstadoSolicitudController::class, 'index'])->name('estados.index');
         Route::post('/estados-solicitud', [EstadoSolicitudController::class, 'store'])->name('estados.store');
+        Route::get('/estados-solicitud/{id}/edit', [EstadoSolicitudController::class, 'edit'])->name('estados.edit');
+        Route::put('/estados-solicitud/{id}', [EstadoSolicitudController::class, 'update'])->name('estados.update');
         Route::delete('/estados-solicitud/{id}', [EstadoSolicitudController::class, 'destroy'])->name('estados.destroy');
 
         // Parentescos
         Route::get('/parentescos', [ParentescoController::class, 'index'])->name('parentescos.index');
         Route::post('/parentescos', [ParentescoController::class, 'store'])->name('parentescos.store');
+        Route::get('/parentescos/{id}/edit', [ParentescoController::class, 'edit'])->name('parentescos.edit');
+        Route::put('/parentescos/{id}', [ParentescoController::class, 'update'])->name('parentescos.update');
         Route::delete('/parentescos/{id}', [ParentescoController::class, 'destroy'])->name('parentescos.destroy');
+
+        // Tipos Varios
+        Route::get('/tipos-varios', [TipoVarioController::class, 'index'])->name('tiposvarios.index');
+        Route::post('/tipos-varios', [TipoVarioController::class, 'store'])->name('tiposvarios.store');
+        Route::get('/tipos-varios/{id}/edit', [TipoVarioController::class, 'edit'])->name('tiposvarios.edit');
+        Route::put('/tipos-varios/{id}', [TipoVarioController::class, 'update'])->name('tiposvarios.update');
+        Route::delete('/tipos-varios/{id}', [TipoVarioController::class, 'destroy'])->name('tiposvarios.destroy');
     });
 });

@@ -18,7 +18,6 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>#</th>
                         <th>Nombre</th>
                         <th>Descripción</th>
                         <th>Acciones</th>
@@ -27,10 +26,12 @@
                 <tbody>
                     @forelse($tipos as $tipo)
                         <tr>
-                            <td>{{ $tipo->id }}</td>
                             <td>{{ $tipo->nombre }}</td>
                             <td>{{ $tipo->descripcion ?? '—' }}</td>
                             <td>
+                                <a href="{{ route('tipos.edit', $tipo->id) }}" class="btn btn-sm btn-warning me-1">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
                                 <form action="{{ route('tipos.destroy', $tipo->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')

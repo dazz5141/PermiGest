@@ -17,6 +17,15 @@ class EstadoSolicitudController extends Controller
     }
 
     /**
+     * Mostrar formulario de edición
+     */
+    public function edit($id)
+    {
+        $estado = EstadoSolicitud::findOrFail($id);
+        return view('admin.estados_solicitud.edit', compact('estado'));
+    }
+
+    /**
      * Crear nuevo estado
      */
     public function store(Request $request)
@@ -43,7 +52,7 @@ class EstadoSolicitudController extends Controller
 
         $estado->update($request->only('nombre'));
 
-        return back()->with('success', 'Estado actualizado correctamente.');
+        return redirect()->route('estados.index')->with('success', 'Estado actualizado correctamente.');
     }
 
     /**

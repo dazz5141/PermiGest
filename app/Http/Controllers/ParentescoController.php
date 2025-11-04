@@ -17,6 +17,15 @@ class ParentescoController extends Controller
     }
 
     /**
+     * Mostrar formulario de edición
+     */
+    public function edit($id)
+    {
+        $parentesco = Parentesco::findOrFail($id);
+        return view('admin.parentescos.edit', compact('parentesco'));
+    }
+
+    /**
      * Crear un nuevo parentesco
      */
     public function store(Request $request)
@@ -45,7 +54,7 @@ class ParentescoController extends Controller
 
         $parentesco->update($request->only('nombre', 'observacion'));
 
-        return back()->with('success', 'Parentesco actualizado correctamente.');
+        return redirect()->route('parentescos.index')->with('success', 'Parentesco actualizado correctamente.');
     }
 
     /**

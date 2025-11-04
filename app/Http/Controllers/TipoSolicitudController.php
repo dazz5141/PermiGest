@@ -17,7 +17,15 @@ class TipoSolicitudController extends Controller
     }
 
     /**
-     * Crear nuevo tipo
+     * Mostrar formulario de creación
+     */
+    public function create()
+    {
+        return view('admin.tipos_solicitud.create');
+    }
+
+    /**
+     * Guardar nuevo tipo
      */
     public function store(Request $request)
     {
@@ -28,7 +36,16 @@ class TipoSolicitudController extends Controller
 
         TipoSolicitud::create($request->only('nombre', 'descripcion'));
 
-        return back()->with('success', 'Tipo de solicitud creado correctamente.');
+        return redirect()->route('tipos.index')->with('success', 'Tipo de solicitud creado correctamente.');
+    }
+
+    /**
+     * Mostrar formulario de edición
+     */
+    public function edit($id)
+    {
+        $tipo = TipoSolicitud::findOrFail($id);
+        return view('admin.tipos_solicitud.edit', compact('tipo'));
     }
 
     /**
@@ -45,7 +62,7 @@ class TipoSolicitudController extends Controller
 
         $tipo->update($request->only('nombre', 'descripcion'));
 
-        return back()->with('success', 'Tipo de solicitud actualizado correctamente.');
+        return redirect()->route('tipos.index')->with('success', 'Tipo de solicitud actualizado correctamente.');
     }
 
     /**
@@ -56,6 +73,6 @@ class TipoSolicitudController extends Controller
         $tipo = TipoSolicitud::findOrFail($id);
         $tipo->delete();
 
-        return back()->with('success', 'Tipo de solicitud eliminado correctamente.');
+        return redirect()->route('tipos.index')->with('success', 'Tipo de solicitud eliminado correctamente.');
     }
 }

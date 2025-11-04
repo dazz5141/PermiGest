@@ -96,6 +96,12 @@
                                 <span>Parentescos</span>
                             </a>
                         </li>
+                        <li class="nav-item mb-2">
+                            <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('tiposvarios.index') }}">
+                                <i class="bi bi-circle-fill me-2 text-secondary" style="font-size: 0.4rem;"></i>
+                                <span>Tipos varios de solicitud</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </li>

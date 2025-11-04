@@ -12,7 +12,10 @@ class TipoVario extends Model
 
     protected $table = 'tipos_varios';
 
-    protected $fillable = ['nombre', 'descripcion'];
+    protected $fillable = [
+        'nombre', 
+        'descripcion'
+    ];
 
     public function solicitudes(): HasMany
     {

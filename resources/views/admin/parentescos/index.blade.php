@@ -18,7 +18,6 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>#</th>
                         <th>Nombre</th>
                         <th>Observación</th>
                         <th>Acciones</th>
@@ -27,10 +26,12 @@
                 <tbody>
                     @forelse($parentescos as $p)
                         <tr>
-                            <td>{{ $p->id }}</td>
                             <td>{{ $p->nombre }}</td>
                             <td>{{ $p->observacion ?? '—' }}</td>
                             <td>
+                                <a href="{{ route('parentescos.edit', $p->id) }}" class="btn btn-sm btn-warning me-1">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
                                 <form action="{{ route('parentescos.destroy', $p->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
