@@ -51,8 +51,14 @@
 
                                 <form action="{{ route('admin.usuarios.toggle', $u->id) }}" method="POST" class="d-inline">
                                     @csrf
-                                    <button type="submit" class="btn btn-sm {{ $u->activo ? 'btn-danger' : 'btn-success' }}" 
-                                        onclick="return confirm('{{ $u->activo ? '¿Deshabilitar este usuario?' : '¿Habilitar este usuario?' }}')">
+                                    <button type="submit"
+                                            class="btn btn-sm {{ $u->activo ? 'btn-danger' : 'btn-success' }}"
+                                            data-confirm
+                                            data-confirm-title="{{ $u->activo ? '¿Deshabilitar usuario?' : '¿Habilitar usuario?' }}"
+                                            data-confirm-text="{{ $u->activo ? 'El usuario no podrá acceder al sistema.' : 'El usuario podrá volver a iniciar sesión.' }}"
+                                            data-confirm-btn="Sí, confirmar"
+                                            data-cancel-btn="Cancelar"
+                                            data-confirm-icon="warning">
                                         <i class="bi {{ $u->activo ? 'bi-person-x' : 'bi-person-check' }}"></i>
                                     </button>
                                 </form>
@@ -139,7 +145,16 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="submit"
+                        class="btn btn-primary"
+                        data-confirm
+                        data-confirm-title="¿Crear nuevo usuario?"
+                        data-confirm-text="Se registrará un nuevo usuario en el sistema."
+                        data-confirm-btn="Sí, crear"
+                        data-cancel-btn="Cancelar"
+                        data-confirm-icon="question">
+                    <i class="bi bi-save me-1"></i> Guardar
+                </button>
             </div>
         </form>
     </div>
@@ -170,7 +185,16 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="submit"
+                        class="btn btn-primary"
+                        data-confirm
+                        data-confirm-title="¿Restablecer contraseña?"
+                        data-confirm-text="Se asignará una nueva contraseña al usuario seleccionado."
+                        data-confirm-btn="Sí, confirmar"
+                        data-cancel-btn="Cancelar"
+                        data-confirm-icon="warning">
+                    <i class="bi bi-check2-circle me-1"></i> Guardar
+                </button>
             </div>
         </form>
     </div>
@@ -194,3 +218,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 @endpush
 @endsection
+
+@include('components.confirm')

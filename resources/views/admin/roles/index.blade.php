@@ -37,7 +37,14 @@
                                 <form action="{{ route('admin.roles.destroy', $rol->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este rol?')">
+                                    <button type="submit"
+                                            class="btn btn-sm btn-danger"
+                                            data-confirm
+                                            data-confirm-title="¿Eliminar rol?"
+                                            data-confirm-text="Esta acción eliminará el rol de forma permanente."
+                                            data-confirm-btn="Sí, eliminar"
+                                            data-cancel-btn="Cancelar"
+                                            data-confirm-icon="warning">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -72,9 +79,20 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="submit"
+                        class="btn btn-primary"
+                        data-confirm
+                        data-confirm-title="¿Crear nuevo rol?"
+                        data-confirm-text="Se agregará un nuevo rol al sistema."
+                        data-confirm-btn="Sí, crear"
+                        data-cancel-btn="Cancelar"
+                        data-confirm-icon="question">
+                    <i class="bi bi-save me-1"></i> Guardar
+                </button>
             </div>
         </form>
     </div>
 </div>
 @endsection
+
+@include('components.confirm')

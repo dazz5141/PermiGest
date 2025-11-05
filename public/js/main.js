@@ -229,8 +229,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
 
+    /*
     // ================================================
     // Confirmación antes de enviar formularios
+    // (❌ Desactivado: ahora se usa SweetAlert2 global)
     // ================================================
 
     const submitButtons = document.querySelectorAll('button[type="submit"]');
@@ -250,6 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    */
 
     // ================================================
     // Smooth scroll

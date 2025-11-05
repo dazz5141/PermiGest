@@ -22,6 +22,9 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 
+    <!-- SweetAlert2 global -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     @yield('styles')
 </head>
 <body>
@@ -48,5 +51,6 @@
     <script src="{{ asset('js/main.js') }}"></script>
 
     @yield('scripts')
+    @stack('scripts')
 </body>
 </html>

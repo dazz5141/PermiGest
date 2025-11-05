@@ -177,7 +177,14 @@
                             <i class="bi bi-x-circle me-2"></i>
                             Cancelar
                         </a>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit"
+                                class="btn btn-primary"
+                                data-confirm
+                                data-confirm-title="¿Enviar solicitud?"
+                                data-confirm-text="Se notificará a su jefatura para revisión."
+                                data-confirm-btn="Enviar"
+                                data-cancel-btn="Cancelar"
+                                data-confirm-icon="question">
                             <i class="bi bi-send me-2"></i>
                             Enviar solicitud
                         </button>
@@ -188,3 +195,5 @@
     </div>
 </form>
 @endsection
+
+@include('components.confirm')

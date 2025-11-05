@@ -82,7 +82,14 @@
                     <input type="number" id="año" name="año" value="{{ now()->year }}" class="form-control">
                 </div>
                 <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit"
+                            class="btn btn-primary w-100"
+                            data-confirm
+                            data-confirm-title="¿Generar reporte mensual?"
+                            data-confirm-text="Se abrirá el PDF con el resumen de solicitudes del mes seleccionado."
+                            data-confirm-btn="Generar"
+                            data-cancel-btn="Cancelar"
+                            data-confirm-icon="info">
                         <i class="bi bi-file-earmark-pdf me-2"></i>
                         Generar PDF
                     </button>
@@ -216,3 +223,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 @endsection
+
+@include('components.confirm')
