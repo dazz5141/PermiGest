@@ -106,7 +106,7 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::middleware(['rol:secretaria'])->group(function () {
         Route::get('/reportes/mensuales', function () {
-            return view('dashboard.secretaria'); // Ejemplo inicial
+            return view('dashboard.secretaria'); 
         })->name('reportes.mensuales');
     });
 

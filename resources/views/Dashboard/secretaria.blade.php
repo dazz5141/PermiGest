@@ -5,6 +5,17 @@
 @section('content')
 <div class="container-fluid py-4">
 
+    @php
+        use App\Models\Solicitud;
+
+        $usuario = Auth::user();
+        $totalSolicitudes = Solicitud::count();
+        $pendientes = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'Pendiente'))->count();
+        $aprobadas = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'Aprobada'))->count();
+        $rechazadas = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'Rechazada'))->count();
+        $solicitudes = Solicitud::with(['usuario', 'tipo', 'estado'])->latest()->get();
+    @endphp
+
     {{-- Encabezado --}}
     <div class="d-flex align-items-center mb-4">
         <i class="bi bi-folder2-open text-primary me-3 fs-3"></i>
@@ -14,7 +25,8 @@
     {{-- Bienvenida --}}
     <div class="alert alert-light border-start border-4 border-primary shadow-sm mb-4">
         <i class="bi bi-person-vcard me-2"></i>
-        Bienvenida, <strong>{{ $usuario->nombres }} {{ $usuario->apellidos }}</strong>.
+            @php($usuario = Auth::user())
+            Bienvenida, <strong>{{ $usuario->nombres }} {{ $usuario->apellidos }}</strong>.
         <span class="text-muted">Rol: Secretaría / Administración</span>
     </div>
 
