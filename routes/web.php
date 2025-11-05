@@ -10,6 +10,8 @@ use App\Http\Controllers\EstadoSolicitudController;
 use App\Http\Controllers\ParentescoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\TipoVarioController;
+use App\Http\Controllers\admin\UsuarioController;
+use App\Http\Controllers\admin\RolController;
 
 /*
 |--------------------------------------------------------------------------
@@ -147,5 +149,20 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/tipos-varios/{id}/edit', [TipoVarioController::class, 'edit'])->name('tiposvarios.edit');
         Route::put('/tipos-varios/{id}', [TipoVarioController::class, 'update'])->name('tiposvarios.update');
         Route::delete('/tipos-varios/{id}', [TipoVarioController::class, 'destroy'])->name('tiposvarios.destroy');
+
+            // Usuarios del sistema
+        Route::get('/usuarios', [UsuarioController::class, 'index'])->name('admin.usuarios.index');
+        Route::post('/usuarios', [UsuarioController::class, 'store'])->name('admin.usuarios.store');
+        Route::get('/usuarios/{id}/edit', [UsuarioController::class, 'edit'])->name('admin.usuarios.edit');
+        Route::put('/usuarios/{id}', [UsuarioController::class, 'update'])->name('admin.usuarios.update');
+        Route::post('/usuarios/{id}/toggle', [UsuarioController::class, 'toggle'])->name('admin.usuarios.toggle');
+        Route::post('/usuarios/{id}/reset-password', [UsuarioController::class, 'resetPassword'])->name('admin.usuarios.reset');
+
+        // Roles del sistema
+        Route::get('/roles', [RolController::class, 'index'])->name('admin.roles.index');
+        Route::post('/roles', [RolController::class, 'store'])->name('admin.roles.store');
+        Route::get('/roles/{id}/edit', [RolController::class, 'edit'])->name('admin.roles.edit');
+        Route::put('/roles/{id}', [RolController::class, 'update'])->name('admin.roles.update');
+        Route::delete('/roles/{id}', [RolController::class, 'destroy'])->name('admin.roles.destroy');
     });
 });

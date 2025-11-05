@@ -111,6 +111,7 @@
             ====================================================== --}}
             @elseif(Auth::user()?->rol?->nombre === 'admin')
 
+                {{-- Reportes generales --}}
                 <li class="nav-item mb-2">
                     <a class="nav-link d-flex align-items-center" href="{{ url()->current() }}">
                         <i class="bi bi-graph-up-arrow me-2 text-info"></i>
@@ -118,9 +119,10 @@
                     </a>
                 </li>
 
+                {{-- Sección Administración --}}
                 <li class="nav-item mb-2">
                     <a class="nav-link d-flex align-items-center collapsed" data-bs-toggle="collapse"
-                       href="#adminMenu" role="button" aria-expanded="false" aria-controls="adminMenu">
+                    href="#adminMenu" role="button" aria-expanded="false" aria-controls="adminMenu">
                         <i class="bi bi-gear-fill me-2"></i>
                         <span>Administración</span>
                         <i class="bi bi-chevron-down ms-auto"></i>
@@ -128,39 +130,64 @@
 
                     <div class="collapse" id="adminMenu">
                         <ul class="nav flex-column ms-3 mt-2">
+
+                            {{-- Catálogos base --}}
                             <li class="nav-item mb-2">
                                 <a class="nav-link submenu-link d-flex align-items-center"
-                                   href="{{ route('tipos.index') }}">
-                                    <i class="bi bi-circle-fill me-2 text-secondary" style="font-size: 0.4rem;"></i>
+                                href="{{ route('tipos.index') }}">
+                                    <i class="bi bi-folder2-open me-2 text-secondary" style="font-size: 1rem;"></i>
                                     <span>Tipos de solicitud</span>
                                 </a>
                             </li>
+
                             <li class="nav-item mb-2">
                                 <a class="nav-link submenu-link d-flex align-items-center"
-                                   href="{{ route('estados.index') }}">
-                                    <i class="bi bi-circle-fill me-2 text-secondary" style="font-size: 0.4rem;"></i>
+                                href="{{ route('estados.index') }}">
+                                    <i class="bi bi-flag me-2 text-secondary" style="font-size: 1rem;"></i>
                                     <span>Estados de solicitud</span>
                                 </a>
                             </li>
+
                             <li class="nav-item mb-2">
                                 <a class="nav-link submenu-link d-flex align-items-center"
-                                   href="{{ route('parentescos.index') }}">
-                                    <i class="bi bi-circle-fill me-2 text-secondary" style="font-size: 0.4rem;"></i>
+                                href="{{ route('parentescos.index') }}">
+                                    <i class="bi bi-people me-2 text-secondary" style="font-size: 1rem;"></i>
                                     <span>Parentescos</span>
                                 </a>
                             </li>
+
                             <li class="nav-item mb-2">
                                 <a class="nav-link submenu-link d-flex align-items-center"
-                                   href="{{ route('tiposvarios.index') }}">
-                                    <i class="bi bi-circle-fill me-2 text-secondary" style="font-size: 0.4rem;"></i>
+                                href="{{ route('tiposvarios.index') }}">
+                                    <i class="bi bi-sliders me-2 text-secondary" style="font-size: 1rem;"></i>
                                     <span>Tipos varios</span>
                                 </a>
                             </li>
+
+                            {{-- NUEVAS SECCIONES --}}
+                            <li><hr class="my-2"></li>
+
+                            <li class="nav-item mb-2">
+                                <a class="nav-link submenu-link d-flex align-items-center"
+                                href="{{ route('admin.usuarios.index') }}">
+                                    <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1rem;"></i>
+                                    <span>Usuarios</span>
+                                </a>
+                            </li>
+
+                            <li class="nav-item mb-2">
+                                <a class="nav-link submenu-link d-flex align-items-center"
+                                href="{{ route('admin.roles.index') }}">
+                                    <i class="bi bi-shield-lock-fill me-2 text-secondary" style="font-size: 1rem;"></i>
+                                    <span>Roles</span>
+                                </a>
+                            </li>
+
                         </ul>
                     </div>
                 </li>
-
             @endif
+
 
         </ul>
     </nav>
