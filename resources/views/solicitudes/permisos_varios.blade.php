@@ -15,6 +15,8 @@
     </div>
 </div>
 
+@include('components.alertas')
+
 <form action="{{ route('solicitudes.store') }}" method="POST">
     @csrf
     <input type="hidden" name="tipo_solicitud_id" value="4"> {{-- ID tipo "Permisos varios" --}}

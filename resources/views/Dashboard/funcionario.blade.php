@@ -16,6 +16,8 @@
         <span class="text-muted">Cargo: {{ $usuario->cargo ?? 'Sin definir' }}</span>
     </div>
 
+    @include('components.alertas')
+
     <div class="row g-4">
         <div class="col-md-3">
             <div class="card shadow-sm border-0 rounded-3">

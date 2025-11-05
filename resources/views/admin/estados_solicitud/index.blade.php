@@ -13,6 +13,8 @@
         </button>
     </div>
 
+    @include('components.alertas')
+
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body">
             <table class="table table-hover align-middle">

@@ -18,6 +18,8 @@
         <span class="text-muted">Cargo: {{ $usuario->cargo ?? 'Jefatura Directa' }}</span>
     </div>
 
+    @include('components.alertas')
+
     {{-- Tarjetas de resumen --}}
     <div class="row g-4 mb-4">
         <div class="col-md-4">

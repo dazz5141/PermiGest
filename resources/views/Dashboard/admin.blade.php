@@ -18,6 +18,8 @@
         <span class="text-muted">Rol: Administrador del sistema</span>
     </div>
 
+    @include('components.alertas')
+
     {{-- Métricas globales --}}
     <div class="row g-4 mb-4">
         <div class="col-md-3">

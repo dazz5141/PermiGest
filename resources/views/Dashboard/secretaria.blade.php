@@ -30,6 +30,8 @@
         <span class="text-muted">Rol: Secretaría / Administración</span>
     </div>
 
+    @include('components.alertas')
+
     {{-- Tarjetas de resumen --}}
     <div class="row g-4 mb-4">
         <div class="col-md-4">
