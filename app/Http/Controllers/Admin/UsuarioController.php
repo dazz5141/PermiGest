@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Rol;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+use App\Helpers\AuditoriaHelper;
 
 class UsuarioController extends Controller
 {
@@ -42,7 +44,17 @@ class UsuarioController extends Controller
         $validated['password'] = Hash::make($validated['password']);
         $validated['activo'] = true;
 
-        User::create($validated);
+        $nuevo = User::create($validated);
+
+        /** ✅ AUDITORÍA — creación */
+        AuditoriaHelper::registrar(
+            'users',
+            $nuevo->id,
+            'crear',
+            Auth::user()->id,
+            null,
+            $nuevo->toArray()
+        );
 
         return redirect()->route('admin.usuarios.index')->with('success', 'Usuario creado correctamente.');
     }
@@ -77,7 +89,19 @@ class UsuarioController extends Controller
             'jefe_directo_id' => 'nullable|exists:users,id',
         ]);
 
+        $oldData = $usuario->toArray();
+
         $usuario->update($validated);
+
+        /** AUDITORÍA — actualización */
+        AuditoriaHelper::registrar(
+            'users',
+            $usuario->id,
+            'actualizar',
+            Auth::user()->id,
+            $oldData,
+            $usuario->toArray()
+        );
 
         return redirect()->route('admin.usuarios.index')->with('success', 'Usuario actualizado correctamente.');
     }
@@ -88,8 +112,25 @@ class UsuarioController extends Controller
     public function toggle($id)
     {
         $usuario = User::findOrFail($id);
+
+        $oldData = $usuario->toArray();
+
         $usuario->activo = !$usuario->activo;
         $usuario->save();
+
+        $newData = $usuario->toArray();
+
+        $accion = $usuario->activo ? 'activar' : 'desactivar';
+
+        /** AUDITORÍA — activar / desactivar */
+        AuditoriaHelper::registrar(
+            'users',
+            $usuario->id,
+            $accion,
+            Auth::user()->id,
+            $oldData,
+            $newData
+        );
 
         $mensaje = $usuario->activo
             ? 'Usuario habilitado nuevamente.'
@@ -108,8 +149,21 @@ class UsuarioController extends Controller
         ]);
 
         $usuario = User::findOrFail($id);
+
+        $oldData = ['password' => 'encrypted']; // nunca mostramos passwords reales
+
         $usuario->password = Hash::make($request->password);
         $usuario->save();
+
+        /** AUDITORÍA — reset password */
+        AuditoriaHelper::registrar(
+            'users',
+            $usuario->id,
+            'reset_password',
+            Auth::user()->id,
+            $oldData,
+            ['password' => 'encrypted']
+        );
 
         return redirect()->route('admin.usuarios.index')->with('success', 'Contraseña restablecida correctamente.');
     }

@@ -182,7 +182,13 @@
                                     <span>Roles</span>
                                 </a>
                             </li>
-
+                            <li class="nav-item mb-2">
+                                <a class="nav-link submenu-link d-flex align-items-center"
+                                href="{{ route('auditoria.index') }}">
+                                    <i class="bi bi-search me-2 text-secondary" style="font-size: 1rem;"></i>
+                                    <span>Auditoría del sistema</span>
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </li>

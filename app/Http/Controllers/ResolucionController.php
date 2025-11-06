@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Solicitud;
 use App\Models\Resolucion;
+use App\Helpers\AuditoriaHelper;
 
 class ResolucionController extends Controller
 {
@@ -46,7 +47,7 @@ class ResolucionController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'accion' => 'required|in:aprobado,rechazado',
+            'accion'     => 'required|in:aprobado,rechazado',
             'comentario' => 'nullable|string|max:1000',
         ]);
 
@@ -57,21 +58,38 @@ class ResolucionController extends Controller
             abort(403, 'No tienes permiso para resolver esta solicitud.');
         }
 
+        // Guardar datos ANTES de actualizar
+        $oldData = $solicitud->toArray();
+
         $estado = $request->accion === 'aprobado' ? 3 : 4; // 3 = Aprobado, 4 = Rechazado
+
         $solicitud->update([
-            'estado_solicitud_id' => $estado,
-            'validador_id' => Auth::user()->id,
-            'fecha_revision' => now(),
-            'observaciones_validador' => $request->comentario,
-            'firma_validador' => true,
+            'estado_solicitud_id'      => $estado,
+            'validador_id'             => Auth::user()->id,
+            'fecha_revision'           => now(),
+            'observaciones_validador'  => $request->comentario,
+            'firma_validador'          => true,
         ]);
 
+        // Registrar resolución
         Resolucion::create([
             'solicitud_id' => $solicitud->id,
-            'user_id' => Auth::user()->id,
-            'accion' => $request->accion,
-            'comentario' => $request->comentario,
+            'user_id'      => Auth::user()->id,
+            'accion'       => $request->accion,
+            'comentario'   => $request->comentario,
         ]);
+
+        /**
+         * AUDITORÍA — actualización
+         */
+        AuditoriaHelper::registrar(
+            'solicitudes',            // tabla
+            $solicitud->id,           // registro afectado
+            'actualizar',             // acción
+            Auth::user()->id,         // usuario
+            $oldData,                 // datos antes
+            $solicitud->toArray()     // datos después
+        );
 
         return back()->with('success', 'Resolución registrada correctamente.');
     }

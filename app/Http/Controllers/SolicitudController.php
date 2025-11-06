@@ -10,6 +10,7 @@ use App\Models\TipoSolicitud;
 use App\Models\EstadoSolicitud;
 use App\Models\Parentesco;
 use App\Models\TipoVario;
+use App\Helpers\AuditoriaHelper;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -127,7 +128,7 @@ class SolicitudController extends Controller
             }
         }
 
-        // Ajuste si la jornada indica medio día
+        // Ajuste por jornada media
         $jornada = strtolower(trim($request->jornada));
         if (preg_match('/medio|media|mañana|tarde|mediod/i', $jornada)) {
             $diasSolicitados = 0.5;
@@ -141,8 +142,8 @@ class SolicitudController extends Controller
             $jefe = \App\Models\User::find(3);
         }
 
-        // Crear la solicitud con cálculo automático de días
-        Solicitud::create([
+        // Crear la solicitud
+        $solicitud = Solicitud::create([
             'user_id' => $usuario->id,
             'validador_id' => $jefe?->id, 
             'tipo_solicitud_id' => $request->tipo_solicitud_id,
@@ -159,6 +160,18 @@ class SolicitudController extends Controller
             'fecha_envio' => now(),
             'token_validacion' => Str::uuid(),
         ]);
+
+        /**
+         * AUDITORÍA — SOLO AGREGAMOS ESTO
+         */
+        AuditoriaHelper::registrar(
+            'solicitudes',
+            $solicitud->id,
+            'create',
+            Auth::user()->id,
+            null,
+            $solicitud->toArray()
+        ); 
 
         return redirect()->route('solicitudes.index')
             ->with('success', 'Solicitud enviada correctamente.');

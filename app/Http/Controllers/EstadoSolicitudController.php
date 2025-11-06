@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\EstadoSolicitud;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Helpers\AuditoriaHelper;
 
 class EstadoSolicitudController extends Controller
 {
@@ -34,7 +36,19 @@ class EstadoSolicitudController extends Controller
             'nombre' => 'required|string|max:50',
         ]);
 
-        EstadoSolicitud::create($request->only('nombre'));
+        $nuevo = EstadoSolicitud::create($request->only('nombre'));
+
+        /**
+         * AUDITORÍA — creación
+         */
+        AuditoriaHelper::registrar(
+            'estados_solicitud',   // tabla
+            $nuevo->id,            // ID afectado
+            'crear',               // acción
+            Auth::user()->id,      // usuario
+            null,                  // old values
+            $nuevo->toArray()      // new values
+        );
 
         return back()->with('success', 'Estado creado correctamente.');
     }
@@ -50,7 +64,23 @@ class EstadoSolicitudController extends Controller
             'nombre' => 'required|string|max:50',
         ]);
 
+        // datos antes
+        $oldData = $estado->toArray();
+
+        // actualización
         $estado->update($request->only('nombre'));
+
+        /**
+         * AUDITORÍA — actualización
+         */
+        AuditoriaHelper::registrar(
+            'estados_solicitud',
+            $estado->id,
+            'actualizar',
+            Auth::user()->id,
+            $oldData,
+            $estado->toArray()
+        );
 
         return redirect()->route('estados.index')->with('success', 'Estado actualizado correctamente.');
     }
@@ -61,7 +91,24 @@ class EstadoSolicitudController extends Controller
     public function destroy($id)
     {
         $estado = EstadoSolicitud::findOrFail($id);
+
+        // datos antes de eliminar
+        $oldData = $estado->toArray();
+
+        // eliminar
         $estado->delete();
+
+        /**
+         * AUDITORÍA — eliminación
+         */
+        AuditoriaHelper::registrar(
+            'estados_solicitud',
+            $id,
+            'eliminar',
+            Auth::user()->id,
+            $oldData,
+            null
+        );
 
         return back()->with('success', 'Estado eliminado correctamente.');
     }

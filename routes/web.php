@@ -10,6 +10,7 @@ use App\Http\Controllers\EstadoSolicitudController;
 use App\Http\Controllers\ParentescoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\TipoVarioController;
+use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\admin\UsuarioController;
 use App\Http\Controllers\admin\RolController;
 
@@ -164,5 +165,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/roles/{id}/edit', [RolController::class, 'edit'])->name('admin.roles.edit');
         Route::put('/roles/{id}', [RolController::class, 'update'])->name('admin.roles.update');
         Route::delete('/roles/{id}', [RolController::class, 'destroy'])->name('admin.roles.destroy');
+
+        // Auditoría del sistema
+        Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index')->middleware('auth');
+
     });
 });

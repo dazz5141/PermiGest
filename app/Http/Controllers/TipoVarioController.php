@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\TipoVario;
 use Illuminate\Http\Request;
+use App\Helpers\AuditoriaHelper;
+use Illuminate\Support\Facades\Auth;
 
 class TipoVarioController extends Controller
 {
@@ -26,7 +28,19 @@ class TipoVarioController extends Controller
             'descripcion' => 'nullable|string|max:255',
         ]);
 
-        TipoVario::create($request->only('nombre', 'descripcion'));
+        $tipo = TipoVario::create($request->only('nombre', 'descripcion'));
+
+        /**
+         * AUDITORÍA — creación
+         */
+        AuditoriaHelper::registrar(
+            'tipos_varios',        // Tabla
+            $tipo->id,             // ID afectado
+            'create',               // Acción
+            Auth::user()->id,       // Usuario
+            null,                  // Datos anteriores
+            $tipo->toArray()       // Datos nuevos
+        );
 
         return back()->with('success', 'Tipo de permiso agregado correctamente.');
     }
@@ -51,9 +65,27 @@ class TipoVarioController extends Controller
         ]);
 
         $tipo = TipoVario::findOrFail($id);
+
+        // Guardamos datos anteriores
+        $datosAntes = $tipo->toArray();
+
+        // Actualizamos
         $tipo->update($request->only('nombre', 'descripcion'));
 
-        return redirect()->route('tiposvarios.index')->with('success', 'Tipo de permiso actualizado correctamente.');
+        /**
+         * AUDITORÍA — actualización
+         */
+        AuditoriaHelper::registrar(
+            'tipos_varios',
+            $tipo->id,
+            'actualizar',
+            Auth::user()->id,
+            $datosAntes,          
+            $tipo->toArray()      
+        );
+
+        return redirect()->route('tiposvarios.index')
+            ->with('success', 'Tipo de permiso actualizado correctamente.');
     }
 
     /**
@@ -62,7 +94,24 @@ class TipoVarioController extends Controller
     public function destroy($id)
     {
         $tipo = TipoVario::findOrFail($id);
+
+        // Datos antes de borrar
+        $datosEliminados = $tipo->toArray();
+
+        // Borrar
         $tipo->delete();
+
+        /**
+         * AUDITORÍA — eliminación
+         */
+        AuditoriaHelper::registrar(
+            'tipos_varios',
+            $id,
+            'eliminar',
+            Auth::user()->id,
+            $datosEliminados,    
+            null                  
+        );
 
         return back()->with('success', 'Tipo de permiso eliminado correctamente.');
     }
