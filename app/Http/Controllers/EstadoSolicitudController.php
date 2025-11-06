@@ -44,7 +44,7 @@ class EstadoSolicitudController extends Controller
         AuditoriaHelper::registrar(
             'estados_solicitud',   // tabla
             $nuevo->id,            // ID afectado
-            'crear',               // acción
+            'estado_solicitud_creado',   // acción
             Auth::user()->id,      // usuario
             null,                  // old values
             $nuevo->toArray()      // new values
@@ -76,7 +76,7 @@ class EstadoSolicitudController extends Controller
         AuditoriaHelper::registrar(
             'estados_solicitud',
             $estado->id,
-            'actualizar',
+            'estado_solicitud_actualizado',  
             Auth::user()->id,
             $oldData,
             $estado->toArray()
@@ -104,7 +104,7 @@ class EstadoSolicitudController extends Controller
         AuditoriaHelper::registrar(
             'estados_solicitud',
             $id,
-            'eliminar',
+            'estado_solicitud_eliminado',  
             Auth::user()->id,
             $oldData,
             null

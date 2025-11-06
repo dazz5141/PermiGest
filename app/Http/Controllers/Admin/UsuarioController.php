@@ -50,7 +50,7 @@ class UsuarioController extends Controller
         AuditoriaHelper::registrar(
             'users',
             $nuevo->id,
-            'crear',
+            'usuario_creado',   
             Auth::user()->id,
             null,
             $nuevo->toArray()
@@ -97,7 +97,7 @@ class UsuarioController extends Controller
         AuditoriaHelper::registrar(
             'users',
             $usuario->id,
-            'actualizar',
+            'usuario_actualizado',   
             Auth::user()->id,
             $oldData,
             $usuario->toArray()
@@ -120,7 +120,7 @@ class UsuarioController extends Controller
 
         $newData = $usuario->toArray();
 
-        $accion = $usuario->activo ? 'activar' : 'desactivar';
+        $accion = $usuario->activo ? 'usuario_activado' : 'usuario_desactivado'; 
 
         /** AUDITORÍA — activar / desactivar */
         AuditoriaHelper::registrar(
@@ -159,7 +159,7 @@ class UsuarioController extends Controller
         AuditoriaHelper::registrar(
             'users',
             $usuario->id,
-            'reset_password',
+            'usuario_password_restablecida', 
             Auth::user()->id,
             $oldData,
             ['password' => 'encrypted']

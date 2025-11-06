@@ -33,12 +33,12 @@ class RolController extends Controller
 
         /** AUDITORÍA — creación */
         AuditoriaHelper::registrar(
-            'roles',          // tabla
-            $nuevo->id,       // registro afectado
-            'crear',          // acción estandarizada
-            Auth::user()->id, // usuario ejecutor
-            null,             // oldData
-            $nuevo->toArray() // newData
+            'roles',             // tabla
+            $nuevo->id,          // registro afectado
+            'rol_creado',        // acción 
+            Auth::user()->id,    // usuario ejecutor
+            null,                // oldData
+            $nuevo->toArray()    // newData
         );
 
         return redirect()->route('admin.roles.index')->with('success', 'Rol creado correctamente.');
@@ -73,7 +73,7 @@ class RolController extends Controller
         AuditoriaHelper::registrar(
             'roles',
             $rol->id,
-            'actualizar',
+            'rol_actualizado',    
             Auth::user()->id,
             $oldData,
             $rol->toArray()
@@ -97,7 +97,7 @@ class RolController extends Controller
         AuditoriaHelper::registrar(
             'roles',
             $id,
-            'eliminar',
+            'rol_eliminado',      
             Auth::user()->id,
             $oldData,
             null

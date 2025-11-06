@@ -55,12 +55,23 @@
 
                                 {{-- ACCIÓN --}}
                                 <td>
-                                    <span class="badge
-                                        @if($a->accion === 'crear') bg-success
-                                        @elseif($a->accion === 'actualizar') bg-warning text-dark
-                                        @elseif($a->accion === 'eliminar') bg-danger
-                                        @else bg-secondary @endif">
-                                        {{ strtoupper($a->accion) }}
+                                    @php
+                                        $accion = $a->accion;
+                                        $color = 'bg-secondary';
+
+                                        if (str_contains($accion, 'cread') || str_contains($accion, 'aprob') || str_contains($accion, 'activad')) {
+                                            $color = 'bg-success';
+                                        } 
+                                        elseif (str_contains($accion, 'actualiz') || str_contains($accion, 'password')) {
+                                            $color = 'bg-warning text-dark';
+                                        }
+                                        elseif (str_contains($accion, 'elimin') || str_contains($accion, 'rechaz') || str_contains($accion, 'desactiv')) {
+                                            $color = 'bg-danger';
+                                        }
+                                    @endphp
+
+                                    <span class="badge {{ $color }}">
+                                        {{ \App\Helpers\AuditoriaHelper::accionLegible($a->accion) }}
                                     </span>
                                 </td>
 

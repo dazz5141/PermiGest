@@ -45,7 +45,7 @@ class ParentescoController extends Controller
         AuditoriaHelper::registrar(
             'parentescos',
             $nuevo->id,
-            'crear',
+            'parentesco_creado',     // acción
             Auth::user()->id,
             null,                    // datos antes
             $nuevo->toArray()        // datos después
@@ -78,7 +78,7 @@ class ParentescoController extends Controller
         AuditoriaHelper::registrar(
             'parentescos',
             $parentesco->id,
-            'actualizar',
+            'parentesco_actualizado',   
             Auth::user()->id,
             $oldData,
             $parentesco->toArray()
@@ -106,7 +106,7 @@ class ParentescoController extends Controller
         AuditoriaHelper::registrar(
             'parentescos',
             $id,
-            'eliminar',
+            'parentesco_eliminado',   
             Auth::user()->id,
             $oldData,
             null

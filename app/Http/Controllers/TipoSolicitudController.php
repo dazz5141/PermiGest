@@ -42,12 +42,12 @@ class TipoSolicitudController extends Controller
          * AUDITORÍA — creación
          */
         AuditoriaHelper::registrar(
-            'tipos_solicitud',     // tabla
-            $tipo->id,            // id afectado
-            'crear',              // acción
-            Auth::user()->id,     // usuario
-            null,                 // datos anteriores
-            $tipo->toArray()      // datos nuevos
+            'tipos_solicitud',
+            $tipo->id,
+            'tipo_solicitud_creado', 
+            Auth::user()->id,
+            null,
+            $tipo->toArray()
         );
 
         return redirect()->route('tipos.index')->with('success', 'Tipo de solicitud creado correctamente.');
@@ -86,7 +86,7 @@ class TipoSolicitudController extends Controller
         AuditoriaHelper::registrar(
             'tipos_solicitud',
             $tipo->id,
-            'actualizar',
+            'tipo_solicitud_actualizado', 
             Auth::user()->id,
             $oldData,
             $tipo->toArray()
@@ -113,7 +113,7 @@ class TipoSolicitudController extends Controller
         AuditoriaHelper::registrar(
             'tipos_solicitud',
             $id,
-            'eliminar',
+            'tipo_solicitud_eliminado', 
             Auth::user()->id,
             $oldData,
             null

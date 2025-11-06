@@ -167,7 +167,7 @@ class SolicitudController extends Controller
         AuditoriaHelper::registrar(
             'solicitudes',
             $solicitud->id,
-            'create',
+            'solicitud_creada',
             Auth::user()->id,
             null,
             $solicitud->toArray()

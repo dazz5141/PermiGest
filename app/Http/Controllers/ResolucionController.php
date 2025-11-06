@@ -83,12 +83,14 @@ class ResolucionController extends Controller
          * AUDITORÍA — actualización
          */
         AuditoriaHelper::registrar(
-            'solicitudes',            // tabla
-            $solicitud->id,           // registro afectado
-            'actualizar',             // acción
-            Auth::user()->id,         // usuario
-            $oldData,                 // datos antes
-            $solicitud->toArray()     // datos después
+            'solicitudes',                              // tabla
+            $solicitud->id,                             // registro afectado
+            $request->accion === 'aprobado' 
+                ? 'solicitud_aprobada'                  // acción 
+                : 'solicitud_rechazada',                // acción 
+            Auth::user()->id,                           // usuario
+            $oldData,                                   // datos antes
+            $solicitud->toArray()                       // datos después
         );
 
         return back()->with('success', 'Resolución registrada correctamente.');

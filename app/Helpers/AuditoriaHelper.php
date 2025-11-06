@@ -19,4 +19,29 @@ class AuditoriaHelper
             'navegador'        => request()->header('User-Agent'),
         ]);
     }
+
+    /**
+     * Convierte acciones técnicas a un texto más entendible.
+     */
+    public static function accionLegible($accion)
+    {
+        $map = [
+            // Acciones genéricas
+            'crear'      => 'Registro creado',
+            'actualizar' => 'Registro actualizado',
+            'eliminar'   => 'Registro eliminado',
+
+            // Acciones específicas de solicitudes
+            'solicitud_creada'   => 'Solicitud creada',
+            'solicitud_aprobada' => 'Solicitud aprobada',
+            'solicitud_rechazada'=> 'Solicitud rechazada',
+
+            // Acciones específicas de usuarios
+            'usuario_creado'     => 'Usuario creado',
+            'usuario_actualizado'=> 'Usuario actualizado',
+            'usuario_eliminado'  => 'Usuario eliminado',
+        ];
+
+        return $map[$accion] ?? ucfirst(str_replace('_', ' ', $accion));
+    }
 }

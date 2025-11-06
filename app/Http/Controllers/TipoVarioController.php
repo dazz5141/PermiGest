@@ -34,12 +34,12 @@ class TipoVarioController extends Controller
          * AUDITORÍA — creación
          */
         AuditoriaHelper::registrar(
-            'tipos_varios',        // Tabla
-            $tipo->id,             // ID afectado
-            'create',               // Acción
-            Auth::user()->id,       // Usuario
-            null,                  // Datos anteriores
-            $tipo->toArray()       // Datos nuevos
+            'tipos_varios',        
+            $tipo->id,             
+            'tipo_creado',   
+            Auth::user()->id,       
+            null,                  
+            $tipo->toArray()       
         );
 
         return back()->with('success', 'Tipo de permiso agregado correctamente.');
@@ -78,7 +78,7 @@ class TipoVarioController extends Controller
         AuditoriaHelper::registrar(
             'tipos_varios',
             $tipo->id,
-            'actualizar',
+            'tipo_actualizado', 
             Auth::user()->id,
             $datosAntes,          
             $tipo->toArray()      
@@ -107,7 +107,7 @@ class TipoVarioController extends Controller
         AuditoriaHelper::registrar(
             'tipos_varios',
             $id,
-            'eliminar',
+            'tipo_eliminado', 
             Auth::user()->id,
             $datosEliminados,    
             null                  
