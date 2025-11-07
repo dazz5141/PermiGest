@@ -163,6 +163,14 @@
                                     <span>Tipos varios</span>
                                 </a>
                             </li>
+                            
+                            <li class="nav-item mb-2">
+                                <a class="nav-link submenu-link d-flex align-items-center"
+                                href="{{ route('admin.feriados.index') }}">
+                                    <i class="bi bi-calendar-event me-2 text-secondary" style="font-size: 1rem;"></i>
+                                    <span>Feriados</span>
+                                </a>
+                            </li>
 
                             {{-- NUEVAS SECCIONES --}}
                             <li><hr class="my-2"></li>

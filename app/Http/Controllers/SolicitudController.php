@@ -10,6 +10,7 @@ use App\Models\TipoSolicitud;
 use App\Models\EstadoSolicitud;
 use App\Models\Parentesco;
 use App\Models\TipoVario;
+use App\Models\Feriado;
 use App\Helpers\AuditoriaHelper;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -50,6 +51,9 @@ class SolicitudController extends Controller
             abort(404, 'Tipo de solicitud no válido.');
         }
 
+        // OBTENER FERIADOS PARA VALIDAR FECHAS
+        $feriados = Feriado::pluck('fecha')->toArray();
+
         // Si es permiso con goce, calculamos los días
         $totalDias = 6; // cambiar el valor dependiendo de los días que se quieran asignar
 
@@ -73,7 +77,8 @@ class SolicitudController extends Controller
             'usuario',
             'totalDias',
             'diasTomados',
-            'diasDisponibles'
+            'diasDisponibles',
+            'feriados'
         ));
     }
 
@@ -107,6 +112,26 @@ class SolicitudController extends Controller
 
         // Ejecución de validación con las reglas completas
         $request->validate($rules);
+
+        /* VALIDACIÓN DE FECHAS NO PERMITIDAS */
+
+        $desde = Carbon::parse($request->fecha_desde);
+        $hasta = Carbon::parse($request->fecha_hasta);
+
+        // No permitir fines de semana
+        if ($desde->isWeekend() || $hasta->isWeekend()) {
+            return back()->withErrors([
+                'fecha_desde' => 'Los permisos no se pueden tomar sábados ni domingos.'
+            ])->withInput();
+        }
+
+        // No permitir feriados
+
+        if (Feriado::whereIn('fecha', [$desde->toDateString(), $hasta->toDateString()])->exists()) {
+            return back()->withErrors([
+                'fecha_desde' => 'Los permisos no se pueden tomar en feriados.'
+            ])->withInput();
+        }
 
         // Cálculo de días solicitados
         $diasSolicitados = null;

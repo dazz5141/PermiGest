@@ -435,3 +435,9 @@ textarea.form-control {
 .alert {
     animation: fadeIn 0.4s ease-out;
 }
+
+/* rojo suave para indicar selección inválida */
+input.is-invalid {
+    border-color: #dc3545 !important;
+    background-color: #ffe6e6 !important;
+}

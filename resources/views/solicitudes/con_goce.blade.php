@@ -425,6 +425,82 @@ document.addEventListener('DOMContentLoaded', () => {
         tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
+
+            // VALIDAR SABADOS, DOMINGOS Y FERIADOS
+        const feriados = @json($feriados ?? []);
+
+        function validarFechaNoHabil(input) {
+            input.addEventListener('change', function () {
+                if (!this.value) return;
+
+                const fecha = new Date(this.value + "T00:00:00");
+                const dia = fecha.getUTCDay(); // 0 domingo, 6 sábado
+
+                // No permitir fines de semana
+                if (dia === 0 || dia === 6) {
+                    alert("Los permisos no se pueden solicitar sábados ni domingos.");
+                    this.value = "";
+                    return;
+                }
+
+                // No permitir feriados ingresados en la BD
+                if (feriados.includes(this.value)) {
+                    alert("La fecha seleccionada corresponde a un feriado.");
+                    this.value = "";
+                    return;
+                }
+
+                
+            });
+        }
+
+        validarFechaNoHabil(document.getElementById('fecha_desde'));
+        validarFechaNoHabil(document.getElementById('fecha_hasta'));
+
+            // DESHABILITAR SÁBADOS, DOMINGOS Y FERIADOS
+            const feriados = @json($feriados ?? []);
+
+            const fechaDesde = document.getElementById('fecha_desde');
+            const fechaHasta = document.getElementById('fecha_hasta');
+
+            function esFinDeSemana(dateStr) {
+                const f = new Date(dateStr + "T00:00:00");
+                const d = f.getUTCDay();
+                return d === 0 || d === 6; // domingo 0 / sábado 6
+            }
+
+            function esFeriado(dateStr) {
+                return feriados.includes(dateStr);
+            }
+
+            function validarFecha(input) {
+                input.addEventListener('change', function () {
+                    if (!this.value) return;
+
+                    if (esFinDeSemana(this.value) || esFeriado(this.value)) {
+                        this.value = "";
+                        this.classList.add("is-invalid");
+
+                        // mensaje debajo del input
+                        let msg = this.nextElementSibling;
+                        if (!msg || !msg.classList.contains("invalid-feedback-custom")) {
+                            msg = document.createElement("div");
+                            msg.classList.add("invalid-feedback-custom", "text-danger", "mt-1");
+                            this.parentNode.appendChild(msg);
+                        }
+
+                        msg.innerHTML = "No se pueden seleccionar fines de semana ni feriados.";
+                    } else {
+                        this.classList.remove("is-invalid");
+                        const msg = this.parentNode.querySelector(".invalid-feedback-custom");
+                        if (msg) msg.remove();
+                    }
+                });
+            }
+
+            validarFecha(fechaDesde);
+            validarFecha(fechaHasta);
+
     });
 </script>
 @endpush

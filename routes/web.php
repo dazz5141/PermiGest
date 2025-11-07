@@ -13,6 +13,7 @@ use App\Http\Controllers\TipoVarioController;
 use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\admin\UsuarioController;
 use App\Http\Controllers\admin\RolController;
+use App\Http\Controllers\admin\FeriadoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -169,5 +170,7 @@ Route::middleware(['auth'])->group(function () {
         // Auditoría del sistema
         Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index')->middleware('auth');
 
+        // Feriados
+        Route::resource('feriados', FeriadoController::class)->names('admin.feriados')->except('show');
     });
 });

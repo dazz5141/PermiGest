@@ -226,6 +226,81 @@
         </div>
     </div>
 </form>
+
+<!-- Cálculo automático de fecha hasta -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const diasInput   = document.getElementById('dias_solicitados');
+  const fechaDesde  = document.getElementById('fecha_desde');
+  const fechaHasta  = document.getElementById('fecha_hasta');
+
+  function parseLocalDate(yyyyMmDd) {
+    const [y, m, d] = yyyyMmDd.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function formatYmd(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function calcularFechaHasta() {
+    const dias  = parseInt(diasInput.value || 0, 10);
+    const desde = fechaDesde.value;
+
+    if (!dias || !desde) {
+      fechaHasta.value = '';
+      return;
+    }
+
+    const inicio = parseLocalDate(desde);
+    const fin    = new Date(inicio);
+    fin.setDate(inicio.getDate() + (dias - 1));
+
+    fechaHasta.value = formatYmd(fin);
+  }
+
+  diasInput.addEventListener('input',  calcularFechaHasta);
+  diasInput.addEventListener('change', calcularFechaHasta);
+  fechaDesde.addEventListener('change', calcularFechaHasta);
+
+  calcularFechaHasta();
+});
+</script>
+
+<!-- Validación de fines de semana y feriados -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const feriados = @json($feriados ?? []);
+
+    function validarFechaNoHabil(input) {
+        input.addEventListener('change', function () {
+            if (!this.value) return;
+
+            const fecha = new Date(this.value + "T00:00:00");
+            const dia = fecha.getDay();
+
+            if (dia === 0 || dia === 6) {
+                alert("Los permisos no se pueden tomar sábados ni domingos.");
+                this.value = "";
+                return;
+            }
+
+            if (feriados.includes(this.value)) {
+                alert("La fecha seleccionada corresponde a un feriado.");
+                this.value = "";
+                return;
+            }
+        });
+    }
+
+    validarFechaNoHabil(document.getElementById('fecha_desde'));
+    validarFechaNoHabil(document.getElementById('fecha_hasta'));
+});
+</script>
+
 @endsection
 
 @include('components.confirm')

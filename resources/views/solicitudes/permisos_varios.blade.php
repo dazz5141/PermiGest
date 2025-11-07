@@ -194,6 +194,48 @@
         </div>
     </div>
 </form>
+
+<!-- Validación de fines de semana / feriados para datetime-local -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const feriados = @json($feriados ?? []);
+
+    function extraerFecha(datetimeValue) {
+        // datetime-local → "2025-05-30T14:30"
+        return datetimeValue ? datetimeValue.split('T')[0] : null;
+    }
+
+    function validarFechaNoHabil(input) {
+        input.addEventListener('change', function () {
+            const fechaCompleta = this.value;
+            const fecha = extraerFecha(fechaCompleta); // solo la parte YYYY-MM-DD
+
+            if (!fecha) return;
+
+            const dateObj = new Date(fecha + "T00:00:00");
+            const dia = dateObj.getDay(); // 0 = Domingo, 6 = Sábado
+
+            // Bloquear sábado o domingo
+            if (dia === 0 || dia === 6) {
+                alert("Los permisos no se pueden tomar sábados ni domingos.");
+                this.value = "";
+                return;
+            }
+
+            // Bloquear feriados exactos
+            if (feriados.includes(fecha)) {
+                alert("La fecha seleccionada corresponde a un feriado.");
+                this.value = "";
+                return;
+            }
+        });
+    }
+
+    validarFechaNoHabil(document.getElementById('fecha_desde'));
+    validarFechaNoHabil(document.getElementById('fecha_hasta'));
+});
+</script>
+
 @endsection
 
 @include('components.confirm')
