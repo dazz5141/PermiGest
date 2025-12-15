@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('solicitudes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('periodo_id')->constrained('periodos_administrativos');
             $table->foreignId('tipo_solicitud_id')->constrained('tipos_solicitud');
             $table->foreignId('estado_solicitud_id')->default(1)->constrained('estados_solicitud');
             $table->foreignId('parentesco_id')->nullable()->constrained('parentescos')->nullOnDelete();

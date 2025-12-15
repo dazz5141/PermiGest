@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Models\Solicitud;
+use App\Models\PeriodoAdministrativo;
 use Carbon\Carbon;
 
 class ResumenPermisosController extends Controller
@@ -12,15 +13,23 @@ class ResumenPermisosController extends Controller
     {
         $userId = Auth::user()->id;
 
-        // Últimos 2 años
-        $desde = Carbon::now()->subYears(2)->startOfDay();
-        $hasta = Carbon::now()->endOfDay();
+        // Leer período desde selector (GET)
+        $periodoIdSeleccionado = request('periodo_id');
+        
+        // Obtener período administrativo activo
+        $periodoActivo = $periodoIdSeleccionado
+            ? PeriodoAdministrativo::find($periodoIdSeleccionado)
+            : PeriodoAdministrativo::activo();
 
-        // Solo solicitudes APROBADAS del usuario
+        if (!$periodoActivo) {
+            abort(500, 'No existe un período administrativo activo.');
+        }
+
+        // Solo solicitudes APROBADAS del usuario en el período activo
         $solicitudes = Solicitud::with(['tipo', 'parentesco'])
             ->where('user_id', $userId)
             ->where('estado_solicitud_id', 3) // Aprobadas
-            ->whereDate('fecha_desde', '>=', $desde->toDateString())
+            ->where('periodo_id', $periodoActivo->id)
             ->orderBy('fecha_desde')
             ->get();
 
@@ -31,16 +40,18 @@ class ResumenPermisosController extends Controller
         $ID_VARIOS       = 4;
 
         // Agrupaciones
-        $conGoce = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === $ID_CON_GOCE);
-        $sinGoce = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === $ID_SIN_GOCE);
+        $conGoce   = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === $ID_CON_GOCE);
+        $sinGoce   = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === $ID_SIN_GOCE);
         $defuncion = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === $ID_DEFUNCION);
-        $varios = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === $ID_VARIOS);
+        $varios    = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === $ID_VARIOS);
 
         // Totales
         $totalConGoce   = $conGoce->sum('dias_solicitados');
         $totalSinGoce   = $sinGoce->sum('dias_solicitados');
         $totalDefuncion = $defuncion->sum('dias_solicitados');
         $totalVarios    = $varios->sum('dias_solicitados');
+
+        $periodos = PeriodoAdministrativo::orderBy('anio', 'desc')->get();
 
         return view('permisos.resumen', [
             // Listados
@@ -61,6 +72,10 @@ class ResumenPermisosController extends Controller
                 $totalSinGoce +
                 $totalDefuncion +
                 $totalVarios,
+
+            // Período 
+            'periodoActivo' => $periodoActivo,
+            'periodos'      => $periodos,
         ]);
     }
 }

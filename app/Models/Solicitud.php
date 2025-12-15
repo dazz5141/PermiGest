@@ -12,6 +12,7 @@ class Solicitud extends Model
 
     protected $fillable = [
         'user_id',
+        'periodo_id',
         'tipo_solicitud_id',
         'estado_solicitud_id',
         'parentesco_id',
@@ -78,6 +79,11 @@ class Solicitud extends Model
     public function resoluciones(): HasMany
     {
         return $this->hasMany(Resolucion::class, 'solicitud_id');
+    }
+
+    public function periodo()
+    {
+        return $this->belongsTo(PeriodoAdministrativo::class, 'periodo_id');
     }
 
     public function ultimaResolucion()

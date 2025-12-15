@@ -337,6 +337,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const show = el => el && (el.style.display = 'flex');
     const hide = el => el && (el.style.display = 'none');
 
+    // SUMAR DÍAS HÁBILES (salta sábados, domingos y feriados)
+    function sumarDiasHabiles(fechaInicio, cantidadDias) {
+        let fecha = new Date(fechaInicio);
+        let diasSumados = 0;
+
+        while (diasSumados < cantidadDias) {
+            fecha.setDate(fecha.getDate() + 1);
+
+            const dia = fecha.getUTCDay(); // 0 domingo, 6 sábado
+            const fechaStr = fecha.toISOString().split('T')[0];
+
+            if (dia !== 0 && dia !== 6 && !feriados.includes(fechaStr)) {
+                diasSumados++;
+            }
+        }
+
+        return fecha;
+    }
+
     function actualizarCampos() {
         const dias = parseFloat(diasInput.value || 0);
         const jornada = jornadaSelect.value;
@@ -384,8 +403,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Calcular fecha hasta automáticamente
             if (fechaDesde) {
                 const fecha = new Date(fechaDesde);
-                fecha.setDate(fecha.getDate() + dias - 1);
-                fechaHastaInput.value = fecha.toISOString().split('T')[0];
+                const fechaFinal = sumarDiasHabiles(fechaInicio, dias - 1);
+                fechaHastaInput.value = fechaFinal.toISOString().split('T')[0];
             }
         } else {
             // Por defecto (nada seleccionado)

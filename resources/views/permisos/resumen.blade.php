@@ -6,15 +6,46 @@
 <div class="container-fluid py-4">
 
     {{-- ENCABEZADO --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex align-items-center">
-            <i class="bi bi-clipboard-data text-primary me-3 fs-3"></i>
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div class="d-flex align-items-start">
+            <i class="bi bi-clipboard-data text-primary me-3 fs-3 mt-1"></i>
+
             <div>
-                <h4 class="fw-bold mb-0">Resumen de Permisos Administrativos</h4>
-                <small class="text-muted">Información consolidada – últimos 2 años</small>
+                <h4 class="fw-bold mb-1">Resumen de Permisos Administrativos</h4>
+
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <small class="text-muted">
+                        Información consolidada – Período administrativo
+                        @isset($periodoActivo)
+                            <strong>{{ $periodoActivo->anio }}</strong>
+                        @endisset
+                    </small>
+
+                    {{-- SELECTOR DE PERÍODO --}}
+                    @isset($periodos)
+                    <form method="GET" class="d-print-none">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">
+                                <i class="bi bi-calendar3"></i>
+                            </span>
+                            <select name="periodo_id"
+                                    class="form-select"
+                                    onchange="this.form.submit()">
+                                @foreach($periodos as $periodo)
+                                    <option value="{{ $periodo->id }}"
+                                        @selected($periodoActivo && $periodo->id == $periodoActivo->id)>
+                                        Año {{ $periodo->anio }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </form>
+                    @endisset
+                </div>
             </div>
         </div>
 
+        {{-- ACCIONES --}}
         <div class="d-print-none">
             <a href="{{ route('solicitudes.index') }}" class="btn btn-outline-secondary me-2">
                 <i class="bi bi-arrow-left"></i> Volver
@@ -181,7 +212,7 @@
     <div class="card shadow-sm border-0">
         <div class="card-body text-end">
             <h5 class="mb-0">
-                Total días de ausentismo (últimos 2 años):
+                Total días de ausentismo (período administrativo):
                 <strong>{{ number_format($totalAusentismo, 1) }}</strong>
             </h5>
         </div>

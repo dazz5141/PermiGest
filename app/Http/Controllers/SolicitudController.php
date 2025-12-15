@@ -11,6 +11,7 @@ use App\Models\EstadoSolicitud;
 use App\Models\Parentesco;
 use App\Models\TipoVario;
 use App\Models\Feriado;
+use App\Models\PeriodoAdministrativo; 
 use App\Helpers\AuditoriaHelper;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -39,6 +40,12 @@ class SolicitudController extends Controller
         $tipos = TipoSolicitud::all();
         $parentescos = Parentesco::all();
 
+        // obtener período administrativo activo
+        $periodoActivo = PeriodoAdministrativo::activo();
+        if (!$periodoActivo) {
+            abort(500, 'No existe un período administrativo activo.');
+        }
+
         // Mapeo de vistas disponibles
         $vistas = [
             'con_goce' => 'solicitudes.con_goce',
@@ -60,6 +67,7 @@ class SolicitudController extends Controller
         $diasTomados = Solicitud::where('user_id', $usuario->id)
             ->where('tipo_solicitud_id', 1) // tipo con goce
             ->where('estado_solicitud_id', 3) // aprobadas
+            ->where('periodo_id', $periodoActivo->id) // filtrar por período
             ->sum('dias_solicitados');
 
         $diasDisponibles = max($totalDias - $diasTomados, 0);
@@ -88,6 +96,14 @@ class SolicitudController extends Controller
     public function store(Request $request)
     {
         $usuario = Auth::user();
+
+        // obtener período administrativo activo
+        $periodoActivo = PeriodoAdministrativo::activo();
+        if (!$periodoActivo) {
+            return back()->withErrors([
+                'periodo' => 'No existe un período administrativo activo.'
+            ]);
+        }
 
         // Validación dinámica según tipo de solicitud
         $rules = [
@@ -170,6 +186,7 @@ class SolicitudController extends Controller
         // Crear la solicitud
         $solicitud = Solicitud::create([
             'user_id' => $usuario->id,
+            'periodo_id' => $periodoActivo->id, 
             'validador_id' => $jefe?->id, 
             'tipo_solicitud_id' => $request->tipo_solicitud_id,
             'estado_solicitud_id' => 1, // Pendiente

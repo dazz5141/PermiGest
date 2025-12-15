@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             EstadosSolicitudSeeder::class,
             ParentescosSeeder::class,
             TiposVariosSeeder::class,
+            PeriodoAdministrativoSeeder::class,
         ]);
     }
 }
