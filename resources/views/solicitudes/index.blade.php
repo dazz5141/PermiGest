@@ -11,9 +11,15 @@
             <i class="bi bi-folder2-open text-primary me-3 fs-3"></i>
             <h4 class="fw-bold mb-0">Historial de Solicitudes</h4>
         </div>
+        <div class="d-flex gap-2">
         <a href="{{ route('solicitudes.create', ['tipo' => 'con_goce']) }}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Nueva solicitud
         </a>
+
+        <a href="{{ route('mis-permisos.resumen') }}" class="btn btn-outline-primary">
+            <i class="bi bi-printer"></i> Ver resumen / Imprimir
+        </a>
+    </div>
     </div>
 
     {{-- Mensaje flash --}}

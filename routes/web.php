@@ -11,6 +11,7 @@ use App\Http\Controllers\ParentescoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\TipoVarioController;
 use App\Http\Controllers\AuditoriaController;
+use App\Http\Controllers\ResumenPermisosController;
 use App\Http\Controllers\admin\UsuarioController;
 use App\Http\Controllers\admin\RolController;
 use App\Http\Controllers\admin\FeriadoController;
@@ -62,6 +63,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/crear/{tipo}', [SolicitudController::class, 'create'])->name('create'); // Formulario según tipo
             Route::post('/', [SolicitudController::class, 'store'])->name('store');      // Enviar solicitud
         });
+        // Resumen / Historial oficial de permisos
+        Route::get('/mis-permisos/resumen', [ResumenPermisosController::class, 'index'])->name('mis-permisos.resumen');
     });
 
 

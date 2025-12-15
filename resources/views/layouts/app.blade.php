@@ -26,6 +26,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     @yield('styles')
+    @stack('styles')
 </head>
 <body>
     <div class="wrapper">

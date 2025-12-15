@@ -46,7 +46,7 @@ class UsuarioController extends Controller
 
         $nuevo = User::create($validated);
 
-        /** ✅ AUDITORÍA — creación */
+        /** AUDITORÍA — creación */
         AuditoriaHelper::registrar(
             'users',
             $nuevo->id,
