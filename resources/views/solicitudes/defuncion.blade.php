@@ -270,37 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<!-- Validación de fines de semana y feriados -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const feriados = @json($feriados ?? []);
-
-    function validarFechaNoHabil(input) {
-        input.addEventListener('change', function () {
-            if (!this.value) return;
-
-            const fecha = new Date(this.value + "T00:00:00");
-            const dia = fecha.getDay();
-
-            if (dia === 0 || dia === 6) {
-                alert("Los permisos no se pueden tomar sábados ni domingos.");
-                this.value = "";
-                return;
-            }
-
-            if (feriados.includes(this.value)) {
-                alert("La fecha seleccionada corresponde a un feriado.");
-                this.value = "";
-                return;
-            }
-        });
-    }
-
-    validarFechaNoHabil(document.getElementById('fecha_desde'));
-    validarFechaNoHabil(document.getElementById('fecha_hasta'));
-});
-</script>
-
 @endsection
 
 @include('components.confirm')

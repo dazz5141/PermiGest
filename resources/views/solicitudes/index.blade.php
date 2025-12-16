@@ -50,6 +50,7 @@
                                 <th>Desde</th>
                                 <th>Hasta</th>
                                 <th>Días</th>
+                                <th>Solicitada</th>
                                 <th>Estado</th>
                                 <th>Revisado por</th>
                                 <th class="text-center">Acción</th>
@@ -62,6 +63,12 @@
                                     <td>{{ optional($solicitud->fecha_desde)->format('Y-m-d') }}</td>
                                     <td>{{ optional($solicitud->fecha_hasta)->format('Y-m-d') }}</td>
                                     <td>{{ $solicitud->dias_solicitados ?? '—' }}</td>
+                                    <td>
+                                        {{ $solicitud->fecha_envio?->format('d/m/Y') }}
+                                        <small class="text-muted d-block">
+                                            {{ $solicitud->fecha_envio?->format('H:i') }}
+                                        </small>
+                                    </td>
                                     <td>
                                         <span class="badge
                                             @if($solicitud->estado->nombre === 'Aprobado') bg-success

@@ -317,6 +317,7 @@
 </form>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    const feriados = @json($feriados ?? []);
     const diasInput = document.getElementById('dias_solicitados');
     const jornadaSelect = document.getElementById('jornada');
     const fechaDesdeInput = document.getElementById('fecha_desde');
@@ -402,9 +403,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Calcular fecha hasta automáticamente
             if (fechaDesde) {
-                const fecha = new Date(fechaDesde);
+                const fechaInicio = new Date(fechaDesde + 'T00:00:00');
                 const fechaFinal = sumarDiasHabiles(fechaInicio, dias - 1);
-                fechaHastaInput.value = fechaFinal.toISOString().split('T')[0];
+
+                const y = fechaFinal.getFullYear();
+                const m = String(fechaFinal.getMonth() + 1).padStart(2, '0');
+                const d = String(fechaFinal.getDate()).padStart(2, '0');
+
+                fechaHastaInput.value = `${y}-${m}-${d}`;
             }
         } else {
             // Por defecto (nada seleccionado)

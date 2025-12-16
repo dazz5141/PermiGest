@@ -138,26 +138,38 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <a href="{{ route('solicitudes.show', $solicitud->id) }}" class="btn btn-sm btn-outline-primary me-1">
-                                            <i class="bi bi-eye"></i> Ver
-                                        </a>
-                                        <a href="{{ route('solicitudes.pdf', $solicitud->id) }}" target="_blank" class="btn btn-sm btn-outline-secondary me-1">
-                                            <i class="bi bi-printer"></i> Imprimir
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-success me-1"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalResolucion"
-                                            data-id="{{ $solicitud->id }}"
-                                            data-accion="aprobado">
-                                            <i class="bi bi-check-circle"></i> Aprobar
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-danger"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalResolucion"
-                                            data-id="{{ $solicitud->id }}"
-                                            data-accion="rechazado">
-                                            <i class="bi bi-x-circle"></i> Rechazar
-                                        </button>
+                                        <div class="d-inline-flex align-items-center gap-2">
+
+                                            <a href="{{ route('solicitudes.show', $solicitud->id) }}"
+                                            class="btn btn-sm btn-outline-primary px-2">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+
+                                            <a href="{{ route('solicitudes.pdf', $solicitud->id) }}"
+                                            target="_blank"
+                                            class="btn btn-sm btn-outline-secondary px-2">
+                                                <i class="bi bi-printer"></i>
+                                            </a>
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-success px-3"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalResolucion"
+                                                    data-id="{{ $solicitud->id }}"
+                                                    data-accion="aprobado">
+                                                <i class="bi bi-check-circle"></i> Aprobar
+                                            </button>
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-danger px-3"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalResolucion"
+                                                    data-id="{{ $solicitud->id }}"
+                                                    data-accion="rechazado">
+                                                <i class="bi bi-x-circle"></i> Rechazar
+                                            </button>
+
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
