@@ -84,7 +84,7 @@
 <!-- Modal Nuevo Usuario -->
 <div class="modal fade" id="crearUsuarioModal" tabindex="-1" aria-labelledby="crearUsuarioLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <form class="modal-content" method="POST" action="{{ route('admin.usuarios.store') }}">
+        <form id="formCrearUsuario" class="modal-content" method="POST" action="{{ route('admin.usuarios.store') }}">
             @csrf
             <div class="modal-header">
                 <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Nuevo Usuario</h5>
@@ -92,6 +92,14 @@
             </div>
             <div class="modal-body">
                 <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">RUN</label>
+                        <input type="text" class="form-control" name="run" id="run" required>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Correo institucional</label>
+                        <input type="email" class="form-control" name="correo_institucional" required>
+                    </div>
                     <div class="col-md-6">
                         <label class="form-label">Nombres</label>
                         <input type="text" class="form-control" name="nombres" required>
@@ -99,14 +107,6 @@
                     <div class="col-md-6">
                         <label class="form-label">Apellidos</label>
                         <input type="text" class="form-control" name="apellidos" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">RUN</label>
-                        <input type="text" class="form-control" name="run" required>
-                    </div>
-                    <div class="col-md-8">
-                        <label class="form-label">Correo institucional</label>
-                        <input type="email" class="form-control" name="correo_institucional" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Cargo</label>
@@ -145,16 +145,11 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="submit"
-                        class="btn btn-primary"
-                        data-confirm
-                        data-confirm-title="¿Crear nuevo usuario?"
-                        data-confirm-text="Se registrará un nuevo usuario en el sistema."
-                        data-confirm-btn="Sí, crear"
-                        data-cancel-btn="Cancelar"
-                        data-confirm-icon="question">
-                    <i class="bi bi-save me-1"></i> Guardar
-                </button>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Guardar
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -185,16 +180,11 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="submit"
-                        class="btn btn-primary"
-                        data-confirm
-                        data-confirm-title="¿Restablecer contraseña?"
-                        data-confirm-text="Se asignará una nueva contraseña al usuario seleccionado."
-                        data-confirm-btn="Sí, confirmar"
-                        data-cancel-btn="Cancelar"
-                        data-confirm-icon="warning">
-                    <i class="bi bi-check2-circle me-1"></i> Guardar
-                </button>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2-circle me-1"></i> Guardar
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -214,6 +204,62 @@ document.addEventListener('DOMContentLoaded', function () {
         nameSpan.textContent = nombre;
         form.action = `/admin/usuarios/${userId}/reset-password`;
     });
+});
+</script>
+@endpush
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    let runValido = false;
+
+    const modal = document.getElementById('crearUsuarioModal');
+    const form  = document.getElementById('formCrearUsuario');
+
+    modal.addEventListener('shown.bs.modal', function () {
+
+        if (!$('#run').data('rut-init')) {
+
+            $('#run').Rut({
+                format: false,
+                validation: true,
+                on_error: function () {
+                    runValido = false;
+                    $('#run').addClass('is-invalid');
+                },
+                on_success: function () {
+                    runValido = true;
+                    $('#run').removeClass('is-invalid');
+                }
+            });
+
+            $('#run').on('keyup', function () {
+                const val = $(this).val();
+                $(this).val($.Rut.formatear(val, true));
+            });
+
+            $('#run').data('rut-init', true);
+        }
+    });
+
+    // 🚨 BLOQUEAR ENVÍO SI RUN ES INVÁLIDO
+    form.addEventListener('submit', function (e) {
+        if (!runValido) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            $('#run').addClass('is-invalid');
+
+            Swal.fire({
+                icon: 'error',
+                title: 'RUN inválido',
+                text: 'Debe ingresar un RUN chileno válido antes de continuar.',
+            });
+
+            return false;
+        }
+    });
+
 });
 </script>
 @endpush

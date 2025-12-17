@@ -41,6 +41,14 @@ class UsuarioController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
 
+        try {
+            $validated['run'] = $this->formatearRun($validated['run']);
+        } catch (\Exception $e) {
+            return back()
+                ->withErrors(['run' => 'El RUN ingresado no es válido.'])
+                ->withInput();
+        }
+
         $validated['password'] = Hash::make($validated['password']);
         $validated['activo'] = true;
 
@@ -90,6 +98,14 @@ class UsuarioController extends Controller
         ]);
 
         $oldData = $usuario->toArray();
+
+        try {
+            $validated['run'] = $this->formatearRun($validated['run']);
+        } catch (\Exception $e) {
+            return back()
+                ->withErrors(['run' => 'El RUN ingresado no es válido.'])
+                ->withInput();
+        }
 
         $usuario->update($validated);
 
@@ -166,5 +182,45 @@ class UsuarioController extends Controller
         );
 
         return redirect()->route('admin.usuarios.index')->with('success', 'Contraseña restablecida correctamente.');
+    }
+
+    /**
+     * Valida y formatea RUN chileno a 12.345.678-9
+     */
+    private function formatearRun(string $run): string
+    {
+        $run = strtoupper(trim($run));
+        $run = str_replace(['.', '-'], '', $run);
+
+        $numero = substr($run, 0, -1);
+        $dv     = substr($run, -1);
+
+        // validar número
+        if (!ctype_digit($numero)) {
+            throw new \Exception('RUN inválido');
+        }
+
+        // calcular DV
+        $suma = 0;
+        $multiplo = 2;
+
+        for ($i = strlen($numero) - 1; $i >= 0; $i--) {
+            $suma += $numero[$i] * $multiplo;
+            $multiplo = $multiplo == 7 ? 2 : $multiplo + 1;
+        }
+
+        $resto = $suma % 11;
+        $dvEsperado = 11 - $resto;
+
+        if ($dvEsperado == 11) $dvEsperado = '0';
+        elseif ($dvEsperado == 10) $dvEsperado = 'K';
+        else $dvEsperado = (string) $dvEsperado;
+
+        if ($dv !== $dvEsperado) {
+            throw new \Exception('RUN inválido');
+        }
+
+        // FORMATO FINAL
+        return number_format($numero, 0, '', '.') . '-' . $dv;
     }
 }

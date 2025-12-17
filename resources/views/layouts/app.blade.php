@@ -47,6 +47,14 @@
 
     <!-- Bootstrap 5.3 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery (REQUERIDO para validador RUN) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+            integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+            crossorigin="anonymous"></script>
+
+    <!-- Validador RUN chileno -->
+    <script src="{{ asset('js/jquery.Rut.min.js') }}"></script>
 
     <!-- Custom JS -->
     <script src="{{ asset('js/main.js') }}"></script>

@@ -25,6 +25,7 @@ class User extends Authenticatable
         'correo_institucional',
         'cargo',
         'departamento',
+        'rol_id',
         'password',
         'activo',
         'jefe_directo_id',

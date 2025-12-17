@@ -20,6 +20,17 @@
                 @method('PUT')
 
                 <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">RUN</label>
+                        <input type="text" class="form-control" name="run" value="{{ $usuario->run }}" readonly>
+                        <small class="text-muted">
+                            El RUN no puede ser modificado.
+                        </small>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Correo institucional</label>
+                        <input type="email" class="form-control" name="correo_institucional" value="{{ $usuario->correo_institucional }}" required>
+                    </div>
                     <div class="col-md-6">
                         <label class="form-label">Nombres</label>
                         <input type="text" class="form-control" name="nombres" value="{{ $usuario->nombres }}" required>
@@ -27,14 +38,6 @@
                     <div class="col-md-6">
                         <label class="form-label">Apellidos</label>
                         <input type="text" class="form-control" name="apellidos" value="{{ $usuario->apellidos }}" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">RUN</label>
-                        <input type="text" class="form-control" name="run" value="{{ $usuario->run }}" required>
-                    </div>
-                    <div class="col-md-8">
-                        <label class="form-label">Correo institucional</label>
-                        <input type="email" class="form-control" name="correo_institucional" value="{{ $usuario->correo_institucional }}" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Cargo</label>
