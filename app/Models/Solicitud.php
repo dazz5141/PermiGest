@@ -81,6 +81,11 @@ class Solicitud extends Model
         return $this->hasMany(Resolucion::class, 'solicitud_id');
     }
 
+    public function restauraciones(): HasMany
+    {
+        return $this->hasMany(RestauracionPermiso::class, 'solicitud_id');
+    }
+
     public function periodo()
     {
         return $this->belongsTo(PeriodoAdministrativo::class, 'periodo_id');
@@ -89,5 +94,15 @@ class Solicitud extends Model
     public function ultimaResolucion()
     {
         return $this->hasOne(Resolucion::class)->latestOfMany();
+    }
+
+    public function getDiasRestauradosAttribute(): float
+    {
+        return (float) $this->restauraciones->sum('dias_restaurados');
+    }
+
+    public function getDiasNetosDescontadosAttribute(): float
+    {
+        return max((float) $this->dias_solicitados - $this->dias_restaurados, 0);
     }
 }

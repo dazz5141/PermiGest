@@ -190,7 +190,9 @@ body {
    ================================================ */
 
 .content-area {
-    flex: 1;
+    flex: 1 1 auto;
+    width: calc(100% - var(--sidebar-width));
+    max-width: calc(100% - var(--sidebar-width));
     margin-left: var(--sidebar-width);
     padding: 0;
     transition: all 0.3s ease;
@@ -200,6 +202,8 @@ body {
 
 .content-area.expanded {
     margin-left: 0;
+    width: 100%;
+    max-width: 100%;
 }
 
 /* ================================================
@@ -354,6 +358,8 @@ textarea.form-control {
 
     .content-area {
         margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 
     .navbar-brand span {

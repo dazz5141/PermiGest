@@ -16,7 +16,7 @@ class ResumenPermisosController extends Controller
 
     public function index()
     {
-        $userId = Auth::id();
+        $userId = (int) Auth::user()->id;
         $periodoIdSeleccionado = request('periodo_id');
 
         $periodoActivo = $periodoIdSeleccionado
@@ -27,7 +27,7 @@ class ResumenPermisosController extends Controller
             abort(500, 'No existe un periodo administrativo activo.');
         }
 
-        $solicitudes = Solicitud::with(['tipo', 'parentesco'])
+        $solicitudes = Solicitud::with(['tipo', 'parentesco', 'restauraciones'])
             ->where('user_id', $userId)
             ->whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_APROBADO))
             ->where('periodo_id', $periodoActivo->id)
@@ -39,7 +39,7 @@ class ResumenPermisosController extends Controller
         $defuncion = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === self::TIPO_DEFUNCION);
         $varios = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === self::TIPO_VARIOS);
 
-        $totalConGoce = $conGoce->sum('dias_solicitados');
+        $totalConGoce = $conGoce->sum(fn ($solicitud) => $solicitud->dias_netos_descontados);
         $totalSinGoce = $sinGoce->sum('dias_solicitados');
         $totalDefuncion = $defuncion->sum('dias_solicitados');
         $totalVarios = $varios->sum('dias_solicitados');

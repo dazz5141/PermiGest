@@ -48,6 +48,8 @@ class ResolucionController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $usuarioActualId = (int) Auth::user()->id;
+
         $request->validate([
             'accion' => 'required|in:aprobado,rechazado',
             'comentario' => 'nullable|string|max:1000',
@@ -55,7 +57,7 @@ class ResolucionController extends Controller
 
         $solicitud = Solicitud::findOrFail($id);
 
-        if ($solicitud->validador_id !== Auth::id()) {
+        if (!$this->puedeResolver(Auth::user(), $solicitud)) {
             abort(403, 'No tienes permiso para resolver esta solicitud.');
         }
 
@@ -72,7 +74,7 @@ class ResolucionController extends Controller
 
         $solicitud->update([
             'estado_solicitud_id' => $estadoId,
-            'validador_id' => Auth::id(),
+            'validador_id' => $usuarioActualId,
             'fecha_revision' => now(),
             'observaciones_validador' => $request->comentario,
             'firma_validador' => true,
@@ -80,7 +82,7 @@ class ResolucionController extends Controller
 
         Resolucion::create([
             'solicitud_id' => $solicitud->id,
-            'user_id' => Auth::id(),
+            'user_id' => $usuarioActualId,
             'accion' => $request->accion,
             'comentario' => $request->comentario,
         ]);
@@ -89,11 +91,20 @@ class ResolucionController extends Controller
             'solicitudes',
             $solicitud->id,
             $request->accion === 'aprobado' ? 'solicitud_aprobada' : 'solicitud_rechazada',
-            Auth::id(),
+            $usuarioActualId,
             $oldData,
             $solicitud->fresh()->toArray()
         );
 
         return back()->with('success', 'Resolucion registrada correctamente.');
+    }
+
+    private function puedeResolver($usuario, Solicitud $solicitud): bool
+    {
+        if (($solicitud->validador_id ?? null) === $usuario->id) {
+            return true;
+        }
+
+        return (int) ($solicitud->usuario?->jefe_directo_id ?? 0) === (int) $usuario->id;
     }
 }

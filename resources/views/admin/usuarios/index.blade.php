@@ -35,11 +35,14 @@
                             $rolNombre = $u->rol?->nombre ?? '-';
                             $rolMostrado = match($rolNombre) {
                                 'admin' => 'Admin',
+                                'encargado_sistema' => 'Encargado del sistema',
                                 'secretaria' => 'Secretaria',
                                 'jefe_directo' => 'Director',
                                 'funcionario' => 'Funcionario',
                                 default => $rolNombre,
                             };
+                            $rolActual = strtolower(auth()->user()->rol?->nombre ?? '');
+                            $puedeGestionar = $rolActual === 'admin' || in_array($rolNombre, ['funcionario', 'jefe_directo', 'secretaria'], true);
                         @endphp
                         <tr>
                             <td>{{ $u->nombre_completo }}</td>
@@ -55,31 +58,35 @@
                                 @endif
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('admin.usuarios.edit', $u->id) }}" class="btn btn-sm btn-warning me-1">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
+                                @if($puedeGestionar)
+                                    <a href="{{ route('admin.usuarios.edit', $u->id) }}" class="btn btn-sm btn-warning me-1">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
 
-                                <form action="{{ route('admin.usuarios.toggle', $u->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit"
-                                            class="btn btn-sm {{ $u->activo ? 'btn-danger' : 'btn-success' }}"
-                                            data-confirm
-                                            data-confirm-title="{{ $u->activo ? 'Deshabilitar usuario?' : 'Habilitar usuario?' }}"
-                                            data-confirm-text="{{ $u->activo ? 'El usuario no podrá acceder al sistema.' : 'El usuario podrá volver a iniciar sesión.' }}"
-                                            data-confirm-btn="Sí, confirmar"
-                                            data-cancel-btn="Cancelar"
-                                            data-confirm-icon="warning">
-                                        <i class="bi {{ $u->activo ? 'bi-person-x' : 'bi-person-check' }}"></i>
+                                    <form action="{{ route('admin.usuarios.toggle', $u->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit"
+                                                class="btn btn-sm {{ $u->activo ? 'btn-danger' : 'btn-success' }}"
+                                                data-confirm
+                                                data-confirm-title="{{ $u->activo ? 'Deshabilitar usuario?' : 'Habilitar usuario?' }}"
+                                                data-confirm-text="{{ $u->activo ? 'El usuario no podra acceder al sistema.' : 'El usuario podra volver a iniciar sesion.' }}"
+                                                data-confirm-btn="Si, confirmar"
+                                                data-cancel-btn="Cancelar"
+                                                data-confirm-icon="warning">
+                                            <i class="bi {{ $u->activo ? 'bi-person-x' : 'bi-person-check' }}"></i>
+                                        </button>
+                                    </form>
+
+                                    <button class="btn btn-sm btn-primary"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#resetPasswordModal"
+                                            data-id="{{ $u->id }}"
+                                            data-nombre="{{ $u->nombre_completo }}">
+                                        <i class="bi bi-key"></i>
                                     </button>
-                                </form>
-
-                                <button class="btn btn-sm btn-primary"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#resetPasswordModal"
-                                        data-id="{{ $u->id }}"
-                                        data-nombre="{{ $u->nombre_completo }}">
-                                    <i class="bi bi-key"></i>
-                                </button>
+                                @else
+                                    <span class="text-muted small">Sin acceso</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -131,7 +138,13 @@
                             <option value="">Seleccione...</option>
                             @foreach($roles as $r)
                                 <option value="{{ $r->id }}">
-                                    {{ $r->nombre === 'jefe_directo' ? 'Director' : ucfirst(str_replace('_', ' ', $r->nombre)) }}
+                                    {{
+                                        match($r->nombre) {
+                                            'jefe_directo' => 'Director',
+                                            'encargado_sistema' => 'Encargado del sistema',
+                                            default => ucfirst(str_replace('_', ' ', $r->nombre)),
+                                        }
+                                    }}
                                 </option>
                             @endforeach
                         </select>
@@ -146,11 +159,11 @@
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Contraseña</label>
+                        <label class="form-label">Contrasena</label>
                         <input type="password" class="form-control" name="password" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Confirmar contraseña</label>
+                        <label class="form-label">Confirmar contrasena</label>
                         <input type="password" class="form-control" name="password_confirmation" required>
                     </div>
                 </div>
@@ -170,20 +183,20 @@
             @csrf
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="bi bi-key me-2"></i>Restablecer contraseña
+                    <i class="bi bi-key me-2"></i>Restablecer contrasena
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <p class="text-muted small mb-3">
-                    Cambiando contraseña de <span id="resetUserName" class="fw-semibold text-dark"></span>
+                    Cambiando contrasena de <span id="resetUserName" class="fw-semibold text-dark"></span>
                 </p>
                 <div class="mb-3">
-                    <label class="form-label">Nueva contraseña</label>
+                    <label class="form-label">Nueva contrasena</label>
                     <input type="password" name="password" class="form-control" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Confirmar contraseña</label>
+                    <label class="form-label">Confirmar contrasena</label>
                     <input type="password" name="password_confirmation" class="form-control" required>
                 </div>
             </div>
@@ -255,8 +268,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             Swal.fire({
                 icon: 'error',
-                title: 'RUN inválido',
-                text: 'Debe ingresar un RUN chileno válido antes de continuar.',
+                title: 'RUN invalido',
+                text: 'Debe ingresar un RUN chileno valido antes de continuar.',
             });
 
             return false;

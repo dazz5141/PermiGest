@@ -1,26 +1,28 @@
 @extends('layouts.app')
 
-@section('title', 'Panel de Administración - PermiGest Escolar')
+@section('title', 'Panel de Administracion - PermiGest Escolar')
 
 @section('content')
-<div class="container-fluid py-4">
+@php
+    $esEncargadoSistema = strtolower($usuario->rol?->nombre ?? '') === 'encargado_sistema';
+    $tituloPanel = $esEncargadoSistema ? 'Panel Operativo del Sistema' : 'Panel de Administracion';
+    $descripcionRol = $esEncargadoSistema ? 'Rol: Encargado del sistema' : 'Rol: Administrador del sistema';
+@endphp
 
-    {{-- Encabezado --}}
+<div class="container-fluid py-4">
     <div class="d-flex align-items-center mb-4">
         <i class="bi bi-gear-wide-connected text-primary me-3 fs-3"></i>
-        <h4 class="fw-bold mb-0">Panel de Administración</h4>
+        <h4 class="fw-bold mb-0">{{ $tituloPanel }}</h4>
     </div>
 
-    {{-- Bienvenida --}}
     <div class="alert alert-light border-start border-4 border-primary shadow-sm mb-4">
         <i class="bi bi-person-gear me-2"></i>
         Bienvenido(a), <strong>{{ $usuario->nombres }} {{ $usuario->apellidos }}</strong>.
-        <span class="text-muted">Rol: Administrador del sistema</span>
+        <span class="text-muted">{{ $descripcionRol }}</span>
     </div>
 
     @include('components.alertas')
 
-    {{-- Métricas globales --}}
     <div class="row g-4 mb-4">
         <div class="col-md-3">
             <div class="card shadow-sm border-0 rounded-3">
@@ -60,7 +62,6 @@
         </div>
     </div>
 
-    {{-- Reporte mensual --}}
     <div class="card shadow-sm border-0 rounded-4 mb-4">
         <div class="card-header bg-white py-3">
             <h5 class="fw-bold mb-0">
@@ -69,29 +70,29 @@
             </h5>
         </div>
         <div class="card-body">
-            <p class="text-muted">Desde este módulo puede descargar un resumen mensual global del sistema.</p>
+            <p class="text-muted">Desde este modulo puede descargar un resumen mensual global del sistema.</p>
 
             <form action="{{ route('reportes.mensual') }}" method="GET" target="_blank" class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label for="mes" class="form-label fw-semibold">Seleccione mes</label>
                     <select id="mes" name="mes" class="form-select">
                         @foreach(range(1, 12) as $m)
-                            <option value="{{ $m }}" {{ (int)$m === (int)date('m') ? 'selected' : '' }}>
+                            <option value="{{ $m }}" {{ (int) $m === (int) date('m') ? 'selected' : '' }}>
                                 {{ \Carbon\Carbon::create()->month($m)->locale('es')->monthName }}
                             </option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label for="año" class="form-label fw-semibold">Seleccione año</label>
-                    <input type="number" id="año" name="año" value="{{ now()->year }}" class="form-control">
+                    <label for="anio" class="form-label fw-semibold">Seleccione anio</label>
+                    <input type="number" id="anio" name="anio" value="{{ now()->year }}" class="form-control">
                 </div>
                 <div class="col-md-4">
                     <button type="submit"
                             class="btn btn-primary w-100"
                             data-confirm
-                            data-confirm-title="¿Generar reporte mensual?"
-                            data-confirm-text="Se abrirá el PDF con el resumen de solicitudes del mes seleccionado."
+                            data-confirm-title="Generar reporte mensual?"
+                            data-confirm-text="Se abrira el PDF con el resumen de solicitudes del mes seleccionado."
                             data-confirm-btn="Generar"
                             data-cancel-btn="Cancelar"
                             data-confirm-icon="info">
@@ -103,7 +104,6 @@
         </div>
     </div>
 
-    {{-- Tabla global de solicitudes --}}
     <div class="card shadow-sm border-0 rounded-4">
         <div class="card-header bg-white py-3">
             <h5 class="fw-bold mb-0">
@@ -124,13 +124,13 @@
                                 <th>Tipo</th>
                                 <th>Desde</th>
                                 <th>Hasta</th>
-                                <th>Días</th>
+                                <th>Dias</th>
                                 <th>Estado</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach(\App\Models\Solicitud::with(['usuario','tipo','estado'])->orderByDesc('created_at')->get() as $solicitud)
+                            @foreach(\App\Models\Solicitud::with(['usuario', 'tipo', 'estado'])->orderByDesc('created_at')->get() as $solicitud)
                                 <tr>
                                     <td>{{ $solicitud->usuario->nombres }} {{ $solicitud->usuario->apellidos }}</td>
                                     <td>{{ $solicitud->tipo->nombre }}</td>
@@ -153,7 +153,7 @@
                                         <a href="{{ route('solicitudes.pdf', $solicitud->id) }}" target="_blank" class="btn btn-sm btn-outline-secondary me-1">
                                             <i class="bi bi-printer"></i> Imprimir
                                         </a>
-                                        <span class="text-muted small">La resolución final corresponde a Dirección.</span>
+                                        <span class="text-muted small">La resolucion final corresponde a Direccion.</span>
                                     </td>
                                 </tr>
                             @endforeach

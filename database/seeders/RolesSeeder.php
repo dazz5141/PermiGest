@@ -15,6 +15,10 @@ class RolesSeeder extends Seeder
                 'descripcion' => 'Administrador general del sistema. Tiene acceso completo a todos los modulos.',
             ],
             [
+                'nombre' => 'encargado_sistema',
+                'descripcion' => 'Responsable operativo del sistema del colegio. Gestiona usuarios, feriados, auditoria y soporte interno.',
+            ],
+            [
                 'nombre' => 'secretaria',
                 'descripcion' => 'Encargada de registrar y administrar permisos, solicitudes y documentacion.',
             ],

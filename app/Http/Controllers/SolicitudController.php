@@ -31,7 +31,7 @@ class SolicitudController extends Controller
      */
     public function index()
     {
-        $solicitudes = Solicitud::with(['tipo', 'estado'])
+        $solicitudes = Solicitud::with(['tipo', 'estado', 'restauraciones'])
             ->where('user_id', Auth::user()->id)
             ->orderByDesc('created_at')
             ->get();
@@ -251,13 +251,13 @@ class SolicitudController extends Controller
     {
         $usuario = auth()->user();
 
-        $solicitud = Solicitud::with(['usuario', 'tipo', 'estado', 'resoluciones', 'ultimaResolucion'])
+        $solicitud = Solicitud::with(['usuario', 'tipo', 'estado', 'resoluciones', 'ultimaResolucion', 'restauraciones.usuario'])
             ->findOrFail($id);
 
         if (
             $solicitud->user_id === $usuario->id ||
             ($usuario->rol?->nombre === 'jefe_directo' && $solicitud->usuario->jefe_directo_id === $usuario->id) ||
-            in_array($usuario->rol?->nombre, ['secretaria', 'admin'])
+            in_array($usuario->rol?->nombre, ['secretaria', 'encargado_sistema', 'admin'])
         ) {
             return view('solicitudes.show', compact('solicitud'));
         }
@@ -270,11 +270,11 @@ class SolicitudController extends Controller
         $user = auth()->user();
         $rol = strtolower($user->rol->nombre ?? '');
 
-        if (!in_array($rol, ['admin', 'secretaria', 'jefe_directo'])) {
+        if (!in_array($rol, ['admin', 'encargado_sistema', 'secretaria', 'jefe_directo'])) {
             abort(403, 'No tienes permiso para imprimir esta ficha.');
         }
 
-        $solicitud->load(['usuario', 'validador', 'tipo', 'estado', 'ultimaResolucion']);
+        $solicitud->load(['usuario', 'validador', 'tipo', 'estado', 'ultimaResolucion', 'restauraciones.usuario']);
 
         $pdf = Pdf::loadView('solicitudes.pdf', [
             'solicitud' => $solicitud,
@@ -285,11 +285,18 @@ class SolicitudController extends Controller
 
     private function obtenerDiasDisponiblesConGoce(int $userId, int $periodoId): float
     {
-        $diasTomados = Solicitud::where('user_id', $userId)
+        $diasTomados = Solicitud::withSum('restauraciones', 'dias_restaurados')
+            ->where('user_id', $userId)
             ->where('tipo_solicitud_id', self::TIPO_CON_GOCE)
             ->where('estado_solicitud_id', self::ESTADO_APROBADO)
             ->where('periodo_id', $periodoId)
-            ->sum('dias_solicitados');
+            ->get()
+            ->sum(function ($solicitud) {
+                $diasAprobados = (float) $solicitud->dias_solicitados;
+                $diasRestaurados = (float) ($solicitud->restauraciones_sum_dias_restaurados ?? 0);
+
+                return max($diasAprobados - $diasRestaurados, 0);
+            });
 
         return max(self::TOTAL_DIAS_CON_GOCE - $diasTomados, 0);
     }
@@ -316,6 +323,9 @@ class SolicitudController extends Controller
 
     private function rangoTieneDiasNoHabiles(Carbon $desde, Carbon $hasta): bool
     {
-        return $this->contarDiasHabiles($desde, $hasta) !== $desde->diffInDays($hasta) + 1;
+        $diasHabiles = $this->contarDiasHabiles($desde, $hasta);
+        $diasTotalesRango = (int) $desde->copy()->diffInDays($hasta->copy()) + 1;
+
+        return $diasHabiles !== $diasTotalesRango;
     }
 }

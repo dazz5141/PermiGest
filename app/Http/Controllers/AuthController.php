@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    /**
-     * Mostrar formulario de login
-     */
     public function showLoginForm()
     {
-        // Si ya está autenticado, redirige al dashboard
         if (Auth::check()) {
             return redirect()->route('dashboard');
         }
@@ -21,9 +18,6 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    /**
-     * Procesar inicio de sesión
-     */
     public function login(Request $request)
     {
         $request->validate([
@@ -31,28 +25,33 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
+        $usuario = User::where('correo_institucional', $request->correo_institucional)->first();
+
+        if ($usuario && Hash::check($request->password, $usuario->password) && !$usuario->activo) {
+            return back()
+                ->with('error', 'Tu usuario esta deshabilitado. Debes solicitar reactivacion al encargado del sistema.')
+                ->withInput(['correo_institucional']);
+        }
+
         $credentials = [
             'correo_institucional' => $request->correo_institucional,
             'password' => $request->password,
+            'activo' => true,
         ];
 
-        // Autenticación con "remember me"
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             return redirect()
                 ->intended(route('dashboard'))
-                ->with('success', 'Has iniciado sesión correctamente.');
+                ->with('success', 'Has iniciado sesion correctamente.');
         }
 
-        // Si falla la autenticación
-        return back()->with('error', 'Las credenciales no coinciden con nuestros registros.')
-                     ->withInput(['correo_institucional']);
+        return back()
+            ->with('error', 'Las credenciales no coinciden con nuestros registros.')
+            ->withInput(['correo_institucional']);
     }
 
-    /**
-     * Cerrar sesión
-     */
     public function logout(Request $request)
     {
         Auth::logout();
@@ -62,6 +61,6 @@ class AuthController extends Controller
 
         return redirect()
             ->route('login')
-            ->with('status', 'Sesión cerrada correctamente.');
+            ->with('status', 'Sesion cerrada correctamente.');
     }
 }

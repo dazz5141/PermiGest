@@ -39,6 +39,7 @@
                         $rutaVolver = match($rol) {
                             'funcionario' => route('solicitudes.index'),
                             'jefe_directo' => route('resoluciones.index'),
+                            'encargado_sistema' => route('dashboard'),
                             'secretaria' => route('reportes.mensuales'),
                             'admin' => route('dashboard'),
                             default => route('dashboard'),
@@ -49,7 +50,7 @@
                         <i class="bi bi-arrow-left"></i> Volver
                     </a>
 
-                    @if(in_array($rol, ['admin', 'secretaria', 'jefe_directo']))
+                    @if(in_array($rol, ['admin', 'encargado_sistema', 'secretaria', 'jefe_directo']))
                         <a href="{{ route('solicitudes.pdf', $solicitud->id) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
                             <i class="bi bi-printer"></i> Imprimir ficha
                         </a>
@@ -93,9 +94,38 @@
                     </p>
                 </div>
 
+                <div class="col-md-3">
+                    <h6 class="text-muted mb-1">Dias restaurados</h6>
+                    <p>{{ $solicitud->dias_restaurados }}</p>
+                </div>
+
+                <div class="col-md-3">
+                    <h6 class="text-muted mb-1">Dias netos descontados</h6>
+                    <p>{{ $solicitud->dias_netos_descontados }}</p>
+                </div>
+            </div>
+
+            <div class="row mt-3">
                 <div class="col-md-6">
                     <h6 class="text-muted mb-1">Comentario de resolucion</h6>
                     <p>{{ $solicitud->ultimaResolucion?->comentario ?? '-' }}</p>
+                </div>
+
+                <div class="col-md-6">
+                    <h6 class="text-muted mb-1">Historial de restauraciones</h6>
+                    @if($solicitud->restauraciones->isEmpty())
+                        <p class="mb-0 text-muted">No hay restauraciones registradas.</p>
+                    @else
+                        <ul class="mb-0 ps-3">
+                            @foreach($solicitud->restauraciones as $restauracion)
+                                <li>
+                                    {{ $restauracion->created_at?->format('d/m/Y') }}:
+                                    {{ ucfirst($restauracion->tipo) }} de {{ $restauracion->dias_restaurados }} dias
+                                    por {{ $restauracion->motivo }}.
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
                 </div>
             </div>
         </div>

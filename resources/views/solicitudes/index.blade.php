@@ -23,7 +23,7 @@
 
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+                    <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <script>
@@ -42,14 +42,16 @@
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>Tipo de Permiso</th>
+                                <th>Tipo de permiso</th>
                                 <th>Desde</th>
                                 <th>Hasta</th>
-                                <th>Dias</th>
+                                <th>Días aprobados</th>
+                                <th>Días restaurados</th>
+                                <th>Descuento neto</th>
                                 <th>Solicitada</th>
                                 <th>Estado</th>
-                                <th>Resuelto por</th>
-                                <th class="text-center">Accion</th>
+                                <th>Responsable</th>
+                                <th class="text-center">Acción</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -59,6 +61,19 @@
                                     <td>{{ optional($solicitud->fecha_desde)->format('Y-m-d') }}</td>
                                     <td>{{ optional($solicitud->fecha_hasta)->format('Y-m-d') }}</td>
                                     <td>{{ $solicitud->dias_solicitados ?? '-' }}</td>
+                                    <td>
+                                        @if(($solicitud->dias_restaurados ?? 0) > 0)
+                                            <span class="badge bg-info text-dark">{{ $solicitud->dias_restaurados }}</span>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td>
+                                        {{ $solicitud->dias_netos_descontados ?? $solicitud->dias_solicitados ?? '-' }}
+                                        @if(($solicitud->dias_restaurados ?? 0) > 0)
+                                            <small class="text-muted d-block">Ajustado por restauración</small>
+                                        @endif
+                                    </td>
                                     <td>
                                         {{ $solicitud->fecha_envio?->format('d/m/Y') }}
                                         <small class="text-muted d-block">
@@ -75,6 +90,11 @@
                                         </span>
                                     </td>
                                     <td>
+                                        @if(($solicitud->estado->nombre ?? '') === 'Pendiente')
+                                            <small class="text-muted d-block">Director asignado</small>
+                                        @else
+                                            <small class="text-muted d-block">Resuelto por</small>
+                                        @endif
                                         {{ $solicitud->validador?->nombres ?? '-' }}
                                     </td>
                                     <td class="text-center">

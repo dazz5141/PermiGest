@@ -2,7 +2,8 @@
     $rolActual = Auth::user()?->rol?->nombre ?? 'funcionario';
     $rolMostrado = match($rolActual) {
         'jefe_directo' => 'Director',
-        'secretaria' => 'Secretaría',
+        'encargado_sistema' => 'Encargado del sistema',
+        'secretaria' => 'Secretaria',
         'admin' => 'Admin',
         'funcionario' => 'Funcionario',
         default => ucfirst(str_replace('_', ' ', $rolActual)),
@@ -43,29 +44,25 @@
                     <div class="collapse" id="solicitudesMenu">
                         <ul class="nav flex-column ms-3 mt-2">
                             <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center"
-                                   href="{{ route('solicitudes.create', ['tipo' => 'con_goce']) }}">
+                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('solicitudes.create', ['tipo' => 'con_goce']) }}">
                                     <i class="bi bi-circle-fill me-2 text-primary" style="font-size: 0.4rem;"></i>
                                     <span>Permiso con goce de sueldo</span>
                                 </a>
                             </li>
                             <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center"
-                                   href="{{ route('solicitudes.create', ['tipo' => 'sin_goce']) }}">
+                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('solicitudes.create', ['tipo' => 'sin_goce']) }}">
                                     <i class="bi bi-circle-fill me-2 text-primary" style="font-size: 0.4rem;"></i>
                                     <span>Permiso sin goce de sueldo</span>
                                 </a>
                             </li>
                             <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center"
-                                   href="{{ route('solicitudes.create', ['tipo' => 'defuncion']) }}">
+                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('solicitudes.create', ['tipo' => 'defuncion']) }}">
                                     <i class="bi bi-circle-fill me-2 text-primary" style="font-size: 0.4rem;"></i>
-                                    <span>Permiso por defunción</span>
+                                    <span>Permiso por defuncion</span>
                                 </a>
                             </li>
                             <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center"
-                                   href="{{ route('solicitudes.create', ['tipo' => 'varios']) }}">
+                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('solicitudes.create', ['tipo' => 'varios']) }}">
                                     <i class="bi bi-circle-fill me-2 text-primary" style="font-size: 0.4rem;"></i>
                                     <span>Permisos varios</span>
                                 </a>
@@ -79,7 +76,7 @@
                         <i class="bi bi-bar-chart-line me-2 text-success"></i>
                         <div>
                             <span>Solicitudes del establecimiento</span><br>
-                            <span>Reportes y estadísticas</span>
+                            <span>Reportes y estadisticas</span>
                         </div>
                     </a>
                 </li>
@@ -89,8 +86,39 @@
                         <i class="bi bi-bar-chart-line me-2 text-success"></i>
                         <div>
                             <span>Solicitudes pendientes</span><br>
-                            <span>Resolución de Dirección</span>
+                            <span>Resolucion de Direccion</span>
                         </div>
+                    </a>
+                </li>
+            @elseif($rolActual === 'encargado_sistema')
+                <li class="nav-item mb-2">
+                    <a class="nav-link d-flex align-items-center" href="{{ route('dashboard') }}">
+                        <i class="bi bi-speedometer2 me-2 text-primary"></i>
+                        <span>Panel operativo</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link d-flex align-items-center" href="{{ route('admin.usuarios.index') }}">
+                        <i class="bi bi-people-fill me-2 text-secondary"></i>
+                        <span>Usuarios</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link d-flex align-items-center" href="{{ route('admin.feriados.index') }}">
+                        <i class="bi bi-calendar-event me-2 text-secondary"></i>
+                        <span>Feriados</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link d-flex align-items-center" href="{{ route('admin.restauraciones.index') }}">
+                        <i class="bi bi-arrow-counterclockwise me-2 text-secondary"></i>
+                        <span>Restauraciones</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link d-flex align-items-center" href="{{ route('auditoria.index') }}">
+                        <i class="bi bi-search me-2 text-secondary"></i>
+                        <span>Auditoria</span>
                     </a>
                 </li>
             @elseif($rolActual === 'admin')
@@ -105,7 +133,7 @@
                     <a class="nav-link d-flex align-items-center collapsed" data-bs-toggle="collapse"
                        href="#adminMenu" role="button" aria-expanded="false" aria-controls="adminMenu">
                         <i class="bi bi-gear-fill me-2"></i>
-                        <span>Administración</span>
+                        <span>Administracion</span>
                         <i class="bi bi-chevron-down ms-auto"></i>
                     </a>
 
@@ -141,9 +169,13 @@
                                     <span>Feriados</span>
                                 </a>
                             </li>
-
+                            <li class="nav-item mb-2">
+                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('admin.restauraciones.index') }}">
+                                    <i class="bi bi-arrow-counterclockwise me-2 text-secondary" style="font-size: 1rem;"></i>
+                                    <span>Restauraciones</span>
+                                </a>
+                            </li>
                             <li><hr class="my-2"></li>
-
                             <li class="nav-item mb-2">
                                 <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('admin.usuarios.index') }}">
                                     <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1rem;"></i>
@@ -159,7 +191,7 @@
                             <li class="nav-item mb-2">
                                 <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('auditoria.index') }}">
                                     <i class="bi bi-search me-2 text-secondary" style="font-size: 1rem;"></i>
-                                    <span>Auditoría del sistema</span>
+                                    <span>Auditoria del sistema</span>
                                 </a>
                             </li>
                         </ul>

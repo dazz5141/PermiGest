@@ -49,8 +49,14 @@
                         <label class="form-label">Rol</label>
                         <select class="form-select" name="rol_id" required>
                             @foreach($roles as $r)
-                                <option value="{{ $r->id }}" @selected($usuario->rol_id == $r->id)}>
-                                    {{ $r->nombre === 'jefe_directo' ? 'Director' : ucfirst(str_replace('_', ' ', $r->nombre)) }}
+                                <option value="{{ $r->id }}" @selected($usuario->rol_id == $r->id)>
+                                    {{
+                                        match($r->nombre) {
+                                            'jefe_directo' => 'Director',
+                                            'encargado_sistema' => 'Encargado del sistema',
+                                            default => ucfirst(str_replace('_', ' ', $r->nombre)),
+                                        }
+                                    }}
                                 </option>
                             @endforeach
                         </select>

@@ -18,6 +18,7 @@ class DashboardController extends Controller
 
         switch ($usuario->rol?->nombre ?? '') {
             case 'admin':
+            case 'encargado_sistema':
                 $totalUsuarios = User::count();
                 $totalSolicitudes = Solicitud::count();
                 $aprobadas = Solicitud::whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_APROBADO))->count();

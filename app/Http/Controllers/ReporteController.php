@@ -4,51 +4,42 @@ namespace App\Http\Controllers;
 
 use App\Models\Resolucion;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
 
 class ReporteController extends Controller
 {
-    /**
-     * Genera el reporte mensual de permisos en PDF
-     */
     public function reporteMensual(Request $request)
     {
         $usuario = auth()->user();
         $rol = strtolower($usuario->rol?->nombre ?? '');
 
-        // Solo roles permitidos
-        if (!in_array($rol, ['admin', 'secretaria', 'jefe_directo'])) {
+        if (!in_array($rol, ['admin', 'encargado_sistema', 'secretaria', 'jefe_directo'])) {
             abort(403, 'Acceso no autorizado.');
         }
 
-        // Obtener mes/año
         $mes = $request->input('mes', date('m'));
-        $año = $request->input('año', date('Y'));
+        $anio = $request->input('año', $request->input('anio', date('Y')));
 
-        // Cargar resoluciones del mes
         $resoluciones = Resolucion::with([
                 'solicitud.usuario',
                 'solicitud.tipo',
                 'solicitud.estado',
             ])
-            ->whereHas('solicitud', function ($q) use ($mes, $año) {
+            ->whereHas('solicitud', function ($q) use ($mes, $anio) {
                 $q->whereMonth('fecha_desde', $mes)
-                ->whereYear('fecha_desde', $año);
+                    ->whereYear('fecha_desde', $anio);
             })
             ->orderByDesc('id')
             ->get();
 
-        // Generar nombre de mes y PDF
-        $nombreMes = ucfirst(\Carbon\Carbon::createFromDate($año, $mes)->locale('es')->monthName);
+        $nombreMes = ucfirst(\Carbon\Carbon::createFromDate($anio, $mes)->locale('es')->monthName);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reportes.reporte_mensual', [
             'resoluciones' => $resoluciones,
             'nombreMes' => $nombreMes,
-            'año' => $año,
+            'año' => $anio,
             'mes' => $mes,
         ])->setPaper('letter', 'portrait');
 
-        return $pdf->stream("reporte_permisos_{$año}_{$mes}.pdf");
+        return $pdf->stream("reporte_permisos_{$anio}_{$mes}.pdf");
     }
 }

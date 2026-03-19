@@ -13,7 +13,7 @@ class SessionUserProvider extends ServiceProvider
     {
         Event::listen([SessionCreated::class, SessionUpdated::class], function ($event) {
             if (auth()->check()) {
-                $event->session->put('user_id', auth()->id());
+                $event->session->put('user_id', auth()->user()?->id);
             }
         });
     }

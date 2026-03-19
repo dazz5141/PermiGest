@@ -54,8 +54,16 @@
       <td>{{ $solicitud->fecha_hasta?->format('d-m-Y') ?? '-' }}</td>
     </tr>
     <tr>
-      <th>Días</th>
+      <th>Días aprobados</th>
       <td>{{ $solicitud->dias_solicitados ?? '-' }}</td>
+    </tr>
+    <tr>
+      <th>Días restaurados</th>
+      <td>{{ $solicitud->dias_restaurados ?? 0 }}</td>
+    </tr>
+    <tr>
+      <th>Descuento neto</th>
+      <td>{{ $solicitud->dias_netos_descontados ?? '-' }}</td>
     </tr>
     @if(!empty($solicitud->hora_desde) || !empty($solicitud->hora_hasta))
       <tr>
@@ -89,6 +97,28 @@
       </td>
     </tr>
   </table>
+
+  @if($solicitud->restauraciones->isNotEmpty())
+    <table class="mb-2">
+      <tr>
+        <th colspan="4" class="text-center">Historial de restauraciones</th>
+      </tr>
+      <tr>
+        <th style="width: 18%;">Fecha</th>
+        <th style="width: 12%;">Tipo</th>
+        <th style="width: 12%;">Días</th>
+        <th>Motivo</th>
+      </tr>
+      @foreach($solicitud->restauraciones as $restauracion)
+        <tr>
+          <td>{{ $restauracion->created_at?->format('d-m-Y H:i') ?? '-' }}</td>
+          <td>{{ ucfirst($restauracion->tipo) }}</td>
+          <td>{{ number_format($restauracion->dias_restaurados, 1) }}</td>
+          <td>{{ $restauracion->motivo }}</td>
+        </tr>
+      @endforeach
+    </table>
+  @endif
 
   <table class="firmas mt-2">
     <tr>

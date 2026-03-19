@@ -14,23 +14,19 @@ use Illuminate\Validation\ValidationException;
 
 class UsuarioController extends Controller
 {
-    /**
-     * Listado general de usuarios.
-     */
     public function index()
     {
         $usuarios = User::with('rol', 'jefeDirecto')->orderBy('nombres')->get();
-        $roles = Rol::orderBy('nombre')->get();
+        $roles = $this->obtenerRolesGestionables();
         $jefes = $this->obtenerDirectoresActivos();
 
         return view('admin.usuarios.index', compact('usuarios', 'roles', 'jefes'));
     }
 
-    /**
-     * Crear nuevo usuario.
-     */
     public function store(Request $request)
     {
+        $rolesGestionablesIds = $this->obtenerRolesGestionables()->pluck('id')->all();
+
         $validated = $request->validate([
             'nombres' => 'required|string|max:100',
             'apellidos' => 'required|string|max:100',
@@ -38,7 +34,7 @@ class UsuarioController extends Controller
             'correo_institucional' => 'required|email|max:150|unique:users,correo_institucional',
             'cargo' => 'nullable|string|max:100',
             'departamento' => 'nullable|string|max:100',
-            'rol_id' => 'required|exists:roles,id',
+            'rol_id' => ['required', 'exists:roles,id', Rule::in($rolesGestionablesIds)],
             'jefe_directo_id' => [
                 'nullable',
                 Rule::exists('users', 'id')->where(fn ($query) => $query->where('rol_id', $this->obtenerRolDirectorId())),
@@ -49,9 +45,7 @@ class UsuarioController extends Controller
         try {
             $validated['run'] = $this->formatearRun($validated['run']);
         } catch (\Exception $e) {
-            return back()
-                ->withErrors(['run' => 'El RUN ingresado no es válido.'])
-                ->withInput();
+            return back()->withErrors(['run' => 'El RUN ingresado no es valido.'])->withInput();
         }
 
         $this->validarUnicidadDirector((int) $validated['rol_id']);
@@ -61,36 +55,33 @@ class UsuarioController extends Controller
 
         $nuevo = User::create($validated);
 
-        AuditoriaHelper::registrar(
-            'users',
-            $nuevo->id,
-            'usuario_creado',
-            Auth::id(),
-            null,
-            $nuevo->toArray()
-        );
+        AuditoriaHelper::registrar('users', $nuevo->id, 'usuario_creado', Auth::id(), null, $nuevo->toArray());
 
         return redirect()->route('admin.usuarios.index')->with('success', 'Usuario creado correctamente.');
     }
 
-    /**
-     * Formulario de edición.
-     */
     public function edit($id)
     {
         $usuario = User::findOrFail($id);
-        $roles = Rol::orderBy('nombre')->get();
+        $roles = $this->obtenerRolesGestionables();
         $jefes = $this->obtenerDirectoresActivos($usuario->id);
+
+        if (!$this->puedeGestionarUsuario($usuario)) {
+            abort(403, 'No tienes permiso para editar este usuario.');
+        }
 
         return view('admin.usuarios.edit', compact('usuario', 'roles', 'jefes'));
     }
 
-    /**
-     * Actualizar usuario.
-     */
     public function update(Request $request, $id)
     {
         $usuario = User::findOrFail($id);
+
+        if (!$this->puedeGestionarUsuario($usuario)) {
+            abort(403, 'No tienes permiso para editar este usuario.');
+        }
+
+        $rolesGestionablesIds = $this->obtenerRolesGestionables()->pluck('id')->all();
 
         $validated = $request->validate([
             'nombres' => 'required|string|max:100',
@@ -99,7 +90,7 @@ class UsuarioController extends Controller
             'correo_institucional' => 'required|email|max:150|unique:users,correo_institucional,' . $usuario->id,
             'cargo' => 'nullable|string|max:100',
             'departamento' => 'nullable|string|max:100',
-            'rol_id' => 'required|exists:roles,id',
+            'rol_id' => ['required', 'exists:roles,id', Rule::in($rolesGestionablesIds)],
             'jefe_directo_id' => [
                 'nullable',
                 Rule::exists('users', 'id')->where(fn ($query) => $query->where('rol_id', $this->obtenerRolDirectorId())),
@@ -111,33 +102,25 @@ class UsuarioController extends Controller
         try {
             $validated['run'] = $this->formatearRun($validated['run']);
         } catch (\Exception $e) {
-            return back()
-                ->withErrors(['run' => 'El RUN ingresado no es válido.'])
-                ->withInput();
+            return back()->withErrors(['run' => 'El RUN ingresado no es valido.'])->withInput();
         }
 
         $this->validarUnicidadDirector((int) $validated['rol_id'], $usuario->id);
 
         $usuario->update($validated);
 
-        AuditoriaHelper::registrar(
-            'users',
-            $usuario->id,
-            'usuario_actualizado',
-            Auth::id(),
-            $oldData,
-            $usuario->toArray()
-        );
+        AuditoriaHelper::registrar('users', $usuario->id, 'usuario_actualizado', Auth::id(), $oldData, $usuario->toArray());
 
         return redirect()->route('admin.usuarios.index')->with('success', 'Usuario actualizado correctamente.');
     }
 
-    /**
-     * Activar / desactivar usuario.
-     */
     public function toggle($id)
     {
         $usuario = User::findOrFail($id);
+
+        if (!$this->puedeGestionarUsuario($usuario)) {
+            abort(403, 'No tienes permiso para cambiar el estado de este usuario.');
+        }
 
         $oldData = $usuario->toArray();
         $usuario->activo = !$usuario->activo;
@@ -152,16 +135,11 @@ class UsuarioController extends Controller
             $usuario->toArray()
         );
 
-        $mensaje = $usuario->activo
-            ? 'Usuario habilitado nuevamente.'
-            : 'Usuario deshabilitado correctamente.';
+        $mensaje = $usuario->activo ? 'Usuario habilitado nuevamente.' : 'Usuario deshabilitado correctamente.';
 
         return redirect()->route('admin.usuarios.index')->with('success', $mensaje);
     }
 
-    /**
-     * Restablecer contraseña desde modal.
-     */
     public function resetPassword(Request $request, $id)
     {
         $request->validate([
@@ -169,26 +147,20 @@ class UsuarioController extends Controller
         ]);
 
         $usuario = User::findOrFail($id);
-        $oldData = ['password' => 'encrypted'];
 
+        if (!$this->puedeGestionarUsuario($usuario)) {
+            abort(403, 'No tienes permiso para restablecer la contrasena de este usuario.');
+        }
+
+        $oldData = ['password' => 'encrypted'];
         $usuario->password = Hash::make($request->password);
         $usuario->save();
 
-        AuditoriaHelper::registrar(
-            'users',
-            $usuario->id,
-            'usuario_password_restablecida',
-            Auth::id(),
-            $oldData,
-            ['password' => 'encrypted']
-        );
+        AuditoriaHelper::registrar('users', $usuario->id, 'usuario_password_restablecida', Auth::id(), $oldData, ['password' => 'encrypted']);
 
-        return redirect()->route('admin.usuarios.index')->with('success', 'Contraseña restablecida correctamente.');
+        return redirect()->route('admin.usuarios.index')->with('success', 'Contrasena restablecida correctamente.');
     }
 
-    /**
-     * Valida y formatea RUN chileno a 12.345.678-9.
-     */
     private function formatearRun(string $run): string
     {
         $run = strtoupper(trim($run));
@@ -198,7 +170,7 @@ class UsuarioController extends Controller
         $dv = substr($run, -1);
 
         if (!ctype_digit($numero)) {
-            throw new \Exception('RUN inválido');
+            throw new \Exception('RUN invalido');
         }
 
         $suma = 0;
@@ -221,7 +193,7 @@ class UsuarioController extends Controller
         }
 
         if ($dv !== $dvEsperado) {
-            throw new \Exception('RUN inválido');
+            throw new \Exception('RUN invalido');
         }
 
         return number_format($numero, 0, '', '.') . '-' . $dv;
@@ -230,6 +202,19 @@ class UsuarioController extends Controller
     private function obtenerRolDirectorId(): int
     {
         return (int) Rol::where('nombre', 'jefe_directo')->value('id');
+    }
+
+    private function obtenerRolesGestionables()
+    {
+        $rolActual = strtolower(Auth::user()?->rol?->nombre ?? '');
+
+        if ($rolActual === 'admin') {
+            return Rol::orderBy('nombre')->get();
+        }
+
+        return Rol::whereIn('nombre', ['funcionario', 'jefe_directo', 'secretaria'])
+            ->orderBy('nombre')
+            ->get();
     }
 
     private function obtenerDirectoresActivos(?int $excluirUsuarioId = null)
@@ -264,5 +249,18 @@ class UsuarioController extends Controller
                 'rol_id' => 'Ya existe un director registrado en el sistema.',
             ]);
         }
+    }
+
+    private function puedeGestionarUsuario(User $usuario): bool
+    {
+        $rolActual = strtolower(Auth::user()?->rol?->nombre ?? '');
+
+        if ($rolActual === 'admin') {
+            return true;
+        }
+
+        $rolesGestionablesIds = $this->obtenerRolesGestionables()->pluck('id')->all();
+
+        return in_array((int) $usuario->rol_id, $rolesGestionablesIds, true);
     }
 }
