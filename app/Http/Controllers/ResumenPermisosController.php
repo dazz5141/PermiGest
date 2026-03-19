@@ -2,80 +2,62 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
-use App\Models\Solicitud;
 use App\Models\PeriodoAdministrativo;
-use Carbon\Carbon;
+use App\Models\Solicitud;
+use Illuminate\Support\Facades\Auth;
 
 class ResumenPermisosController extends Controller
 {
+    private const ESTADO_APROBADO = 'Aprobado';
+    private const TIPO_CON_GOCE = 1;
+    private const TIPO_SIN_GOCE = 2;
+    private const TIPO_DEFUNCION = 3;
+    private const TIPO_VARIOS = 4;
+
     public function index()
     {
-        $userId = Auth::user()->id;
-
-        // Leer período desde selector (GET)
+        $userId = Auth::id();
         $periodoIdSeleccionado = request('periodo_id');
-        
-        // Obtener período administrativo activo
+
         $periodoActivo = $periodoIdSeleccionado
             ? PeriodoAdministrativo::find($periodoIdSeleccionado)
             : PeriodoAdministrativo::activo();
 
         if (!$periodoActivo) {
-            abort(500, 'No existe un período administrativo activo.');
+            abort(500, 'No existe un periodo administrativo activo.');
         }
 
-        // Solo solicitudes APROBADAS del usuario en el período activo
         $solicitudes = Solicitud::with(['tipo', 'parentesco'])
             ->where('user_id', $userId)
-            ->where('estado_solicitud_id', 3) // Aprobadas
+            ->whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_APROBADO))
             ->where('periodo_id', $periodoActivo->id)
             ->orderBy('fecha_desde')
             ->get();
 
-        // IDs de tipos (Ajustar en caso de cambios en la DB)
-        $ID_CON_GOCE     = 1;
-        $ID_SIN_GOCE     = 2;
-        $ID_DEFUNCION    = 3;
-        $ID_VARIOS       = 4;
+        $conGoce = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === self::TIPO_CON_GOCE);
+        $sinGoce = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === self::TIPO_SIN_GOCE);
+        $defuncion = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === self::TIPO_DEFUNCION);
+        $varios = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === self::TIPO_VARIOS);
 
-        // Agrupaciones
-        $conGoce   = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === $ID_CON_GOCE);
-        $sinGoce   = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === $ID_SIN_GOCE);
-        $defuncion = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === $ID_DEFUNCION);
-        $varios    = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === $ID_VARIOS);
-
-        // Totales
-        $totalConGoce   = $conGoce->sum('dias_solicitados');
-        $totalSinGoce   = $sinGoce->sum('dias_solicitados');
+        $totalConGoce = $conGoce->sum('dias_solicitados');
+        $totalSinGoce = $sinGoce->sum('dias_solicitados');
         $totalDefuncion = $defuncion->sum('dias_solicitados');
-        $totalVarios    = $varios->sum('dias_solicitados');
+        $totalVarios = $varios->sum('dias_solicitados');
 
         $periodos = PeriodoAdministrativo::orderBy('anio', 'desc')->get();
 
         return view('permisos.resumen', [
-            // Listados
-            'conGoce'    => $conGoce,
-            'sinGoce'    => $sinGoce,
-            'defuncion'  => $defuncion,
-            'varios'     => $varios,
-
-            // Totales
-            'totalConGoce'   => $totalConGoce,
-            'totalSinGoce'   => $totalSinGoce,
+            'conGoce' => $conGoce,
+            'sinGoce' => $sinGoce,
+            'defuncion' => $defuncion,
+            'varios' => $varios,
+            'totalConGoce' => $totalConGoce,
+            'totalSinGoce' => $totalSinGoce,
             'totalDefuncion' => $totalDefuncion,
-            'totalVarios'    => $totalVarios,
-
-            // Total general
-            'totalAusentismo' =>
-                $totalConGoce +
-                $totalSinGoce +
-                $totalDefuncion +
-                $totalVarios,
-
-            // Período 
+            'totalVarios' => $totalVarios,
+            'totalAusentismo' => $totalConGoce + $totalSinGoce + $totalDefuncion + $totalVarios,
             'periodoActivo' => $periodoActivo,
-            'periodos'      => $periodos,
+            'periodos' => $periodos,
         ]);
     }
 }

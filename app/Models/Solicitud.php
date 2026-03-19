@@ -23,7 +23,7 @@ class Solicitud extends Model
         'hora_hasta',
         'dias_solicitados',
         'jornada',
-        'tipo_varios',
+        'tipo_vario_id',
         'observaciones',
         'validador_id',
         'fecha_envio',

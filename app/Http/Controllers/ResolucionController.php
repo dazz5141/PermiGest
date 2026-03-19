@@ -2,38 +2,40 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\AuditoriaHelper;
+use App\Models\EstadoSolicitud;
+use App\Models\Resolucion;
+use App\Models\Solicitud;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Solicitud;
-use App\Models\Resolucion;
-use App\Helpers\AuditoriaHelper;
 
 class ResolucionController extends Controller
 {
+    private const ESTADO_PENDIENTE = 'Pendiente';
+    private const ESTADO_APROBADO = 'Aprobado';
+    private const ESTADO_RECHAZADO = 'Rechazado';
+
     /**
-     * Listar solicitudes pendientes para revisar
+     * Listar solicitudes pendientes para resolver.
      */
     public function index()
     {
         $usuario = Auth::user();
 
-        // Obtener los IDs de los subordinados directos del jefe actual
         $subordinadosIds = $usuario->subordinados()
             ->pluck('id')
             ->filter()
             ->toArray();
 
-        // Si no tiene subordinados, devolver vista vacía
         if (empty($subordinadosIds)) {
             return view('resoluciones.index', [
                 'pendientes' => collect(),
-                'usuario' => $usuario
+                'usuario' => $usuario,
             ]);
         }
 
-        // Obtener solicitudes pendientes de revisión de esos subordinados
         $pendientes = Solicitud::whereIn('user_id', $subordinadosIds)
-            ->where('estado_solicitud_id', 1) // 1 = Pendiente
+            ->whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_PENDIENTE))
             ->with(['usuario', 'tipo', 'estado'])
             ->orderByDesc('created_at')
             ->get();
@@ -42,57 +44,56 @@ class ResolucionController extends Controller
     }
 
     /**
-     * Actualizar estado (aprobar/rechazar)
+     * Actualizar estado de la solicitud.
      */
     public function update(Request $request, $id)
     {
         $request->validate([
-            'accion'     => 'required|in:aprobado,rechazado',
+            'accion' => 'required|in:aprobado,rechazado',
             'comentario' => 'nullable|string|max:1000',
         ]);
 
         $solicitud = Solicitud::findOrFail($id);
 
-        // Seguridad: solo el validador asignado o el admin pueden resolver
-        if ($solicitud->validador_id !== Auth::user()->id && Auth::user()->rol_id !== 1) {
+        if ($solicitud->validador_id !== Auth::id()) {
             abort(403, 'No tienes permiso para resolver esta solicitud.');
         }
 
-        // Guardar datos ANTES de actualizar
         $oldData = $solicitud->toArray();
+        $estadoNombre = $request->accion === 'aprobado'
+            ? self::ESTADO_APROBADO
+            : self::ESTADO_RECHAZADO;
 
-        $estado = $request->accion === 'aprobado' ? 3 : 4; // 3 = Aprobado, 4 = Rechazado
+        $estadoId = EstadoSolicitud::where('nombre', $estadoNombre)->value('id');
+
+        if (!$estadoId) {
+            abort(500, 'No se encontro el estado de solicitud requerido.');
+        }
 
         $solicitud->update([
-            'estado_solicitud_id'      => $estado,
-            'validador_id'             => Auth::user()->id,
-            'fecha_revision'           => now(),
-            'observaciones_validador'  => $request->comentario,
-            'firma_validador'          => true,
+            'estado_solicitud_id' => $estadoId,
+            'validador_id' => Auth::id(),
+            'fecha_revision' => now(),
+            'observaciones_validador' => $request->comentario,
+            'firma_validador' => true,
         ]);
 
-        // Registrar resolución
         Resolucion::create([
             'solicitud_id' => $solicitud->id,
-            'user_id'      => Auth::user()->id,
-            'accion'       => $request->accion,
-            'comentario'   => $request->comentario,
+            'user_id' => Auth::id(),
+            'accion' => $request->accion,
+            'comentario' => $request->comentario,
         ]);
 
-        /**
-         * AUDITORÍA — actualización
-         */
         AuditoriaHelper::registrar(
-            'solicitudes',                              // tabla
-            $solicitud->id,                             // registro afectado
-            $request->accion === 'aprobado' 
-                ? 'solicitud_aprobada'                  // acción 
-                : 'solicitud_rechazada',                // acción 
-            Auth::user()->id,                           // usuario
-            $oldData,                                   // datos antes
-            $solicitud->toArray()                       // datos después
+            'solicitudes',
+            $solicitud->id,
+            $request->accion === 'aprobado' ? 'solicitud_aprobada' : 'solicitud_rechazada',
+            Auth::id(),
+            $oldData,
+            $solicitud->fresh()->toArray()
         );
 
-        return back()->with('success', 'Resolución registrada correctamente.');
+        return back()->with('success', 'Resolucion registrada correctamente.');
     }
 }

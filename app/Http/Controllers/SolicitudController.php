@@ -2,22 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
+use App\Helpers\AuditoriaHelper;
+use App\Models\Feriado;
+use App\Models\Parentesco;
+use App\Models\PeriodoAdministrativo;
 use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
-use App\Models\EstadoSolicitud;
-use App\Models\Parentesco;
 use App\Models\TipoVario;
-use App\Models\Feriado;
-use App\Models\PeriodoAdministrativo; 
-use App\Helpers\AuditoriaHelper;
-use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class SolicitudController extends Controller
 {
+    private const TIPO_CON_GOCE = 1;
+    private const TIPO_SIN_GOCE = 2;
+    private const TIPO_DEFUNCION = 3;
+    private const TIPO_VARIOS = 4;
+    private const ESTADO_PENDIENTE = 1;
+    private const ESTADO_APROBADO = 3;
+    private const TOTAL_DIAS_CON_GOCE = 6.0;
+
     /**
      * Listar solicitudes del usuario autenticado
      */
@@ -32,7 +40,7 @@ class SolicitudController extends Controller
     }
 
     /**
-     * Mostrar formulario de creación (usa las vistas Blade existentes)
+     * Mostrar formulario de creacion
      */
     public function create($tipo)
     {
@@ -40,13 +48,11 @@ class SolicitudController extends Controller
         $tipos = TipoSolicitud::all();
         $parentescos = Parentesco::all();
 
-        // obtener período administrativo activo
         $periodoActivo = PeriodoAdministrativo::activo();
         if (!$periodoActivo) {
-            abort(500, 'No existe un período administrativo activo.');
+            abort(500, 'No existe un periodo administrativo activo.');
         }
 
-        // Mapeo de vistas disponibles
         $vistas = [
             'con_goce' => 'solicitudes.con_goce',
             'sin_goce' => 'solicitudes.sin_goce',
@@ -55,23 +61,13 @@ class SolicitudController extends Controller
         ];
 
         if (!array_key_exists($tipo, $vistas)) {
-            abort(404, 'Tipo de solicitud no válido.');
+            abort(404, 'Tipo de solicitud no valido.');
         }
 
-        // OBTENER FERIADOS PARA VALIDAR FECHAS
         $feriados = Feriado::pluck('fecha')->toArray();
-
-        // Si es permiso con goce, calculamos los días
-        $totalDias = 6; // cambiar el valor dependiendo de los días que se quieran asignar
-
-        $diasTomados = Solicitud::where('user_id', $usuario->id)
-            ->where('tipo_solicitud_id', 1) // tipo con goce
-            ->where('estado_solicitud_id', 3) // aprobadas
-            ->where('periodo_id', $periodoActivo->id) // filtrar por período
-            ->sum('dias_solicitados');
-
-        $diasDisponibles = max($totalDias - $diasTomados, 0);
-
+        $totalDias = self::TOTAL_DIAS_CON_GOCE;
+        $diasDisponibles = $this->obtenerDiasDisponiblesConGoce($usuario->id, $periodoActivo->id);
+        $diasTomados = $totalDias - $diasDisponibles;
         $tipos_varios = [];
 
         if ($tipo === 'varios') {
@@ -96,116 +92,145 @@ class SolicitudController extends Controller
     public function store(Request $request)
     {
         $usuario = Auth::user();
-
-        // obtener período administrativo activo
         $periodoActivo = PeriodoAdministrativo::activo();
+
         if (!$periodoActivo) {
             return back()->withErrors([
-                'periodo' => 'No existe un período administrativo activo.'
+                'periodo' => 'No existe un periodo administrativo activo.'
             ]);
         }
 
-        // Validación dinámica según tipo de solicitud
         $rules = [
             'tipo_solicitud_id' => 'required|exists:tipos_solicitud,id',
-            'fecha_desde'       => 'required|date',
-            'fecha_hasta'       => 'required|date|after_or_equal:fecha_desde',
-            'hora_desde'        => 'nullable|date_format:H:i',
-            'hora_hasta'        => 'nullable|date_format:H:i|after:hora_desde',
+            'fecha_desde' => 'required|date',
+            'fecha_hasta' => 'required|date|after_or_equal:fecha_desde',
+            'hora_desde' => 'nullable|date_format:H:i',
+            'hora_hasta' => 'nullable|date_format:H:i|after:hora_desde',
+            'password' => ['required', 'current_password'],
         ];
 
-        // Si es tipo Defunción (ej: ID 3)
-        if ($request->tipo_solicitud_id == 3) {
-            $rules['parentesco_id']    = 'required|exists:parentescos,id';
-            $rules['dias_solicitados'] = 'nullable|numeric|min:1|max:7';
-            $rules['motivo']           = 'nullable|string|max:1000';
-        }
-        // Si es tipo Permisos Varios (ej: ID 4)
-        elseif ($request->tipo_solicitud_id == 4) {
+        $tipoSolicitudId = (int) $request->tipo_solicitud_id;
+
+        if ($tipoSolicitudId === self::TIPO_CON_GOCE) {
+            $rules['motivo'] = 'required|string|max:1000';
+            $rules['dias_solicitados'] = 'required|numeric|min:0.5|max:6';
+            $rules['jornada'] = 'nullable|in:manana,tarde';
+        } elseif ($tipoSolicitudId === self::TIPO_SIN_GOCE) {
+            $rules['motivo'] = 'required|string|max:1000';
+            $rules['dias_solicitados'] = 'required|integer|min:1';
+        } elseif ($tipoSolicitudId === self::TIPO_DEFUNCION) {
+            $rules['parentesco_id'] = 'required|exists:parentescos,id';
+            $rules['dias_solicitados'] = 'required|integer|min:1|max:7';
+            $rules['motivo'] = 'nullable|string|max:1000';
+        } elseif ($tipoSolicitudId === self::TIPO_VARIOS) {
             $rules['tipo_vario_id'] = 'required|exists:tipos_varios,id';
             $rules['motivo'] = 'required|string|max:1000';
         }
 
-        // Ejecución de validación con las reglas completas
         $request->validate($rules);
 
-        /* VALIDACIÓN DE FECHAS NO PERMITIDAS */
-
-        $desde = Carbon::parse($request->fecha_desde);
-        $hasta = Carbon::parse($request->fecha_hasta);
-
-        // No permitir fines de semana
-        if ($desde->isWeekend() || $hasta->isWeekend()) {
+        if (!Hash::check($request->password, $usuario->password)) {
             return back()->withErrors([
-                'fecha_desde' => 'Los permisos no se pueden tomar sábados ni domingos.'
+                'password' => 'La contrasena ingresada no coincide con su cuenta.'
             ])->withInput();
         }
 
-        // No permitir feriados
+        $desde = Carbon::parse($request->fecha_desde)->startOfDay();
+        $hasta = Carbon::parse($request->fecha_hasta)->startOfDay();
 
-        if (Feriado::whereIn('fecha', [$desde->toDateString(), $hasta->toDateString()])->exists()) {
+        if ($this->rangoTieneDiasNoHabiles($desde, $hasta)) {
             return back()->withErrors([
-                'fecha_desde' => 'Los permisos no se pueden tomar en feriados.'
+                'fecha_desde' => 'El rango seleccionado incluye fines de semana o feriados no permitidos.'
             ])->withInput();
         }
 
-        // Cálculo de días solicitados
-        $diasSolicitados = null;
+        $diasSolicitados = $request->filled('dias_solicitados')
+            ? (float) $request->dias_solicitados
+            : null;
 
-        // Si el usuario escribió manualmente los días (por ejemplo 0.5), se respeta
-        if ($request->filled('dias_solicitados')) {
-            $diasSolicitados = floatval($request->dias_solicitados);
-        } 
-        // Si no los ingresó, se calcula automáticamente
-        elseif ($request->filled('fecha_desde') && $request->filled('fecha_hasta')) {
-            $desde = Carbon::parse($request->fecha_desde)->startOfDay();
-            $hasta = Carbon::parse($request->fecha_hasta)->endOfDay();
+        $jornada = strtolower(trim((string) $request->jornada));
+        $esMedioDia = in_array($jornada, ['manana', 'tarde'], true) || $diasSolicitados === 0.5;
+        $diasHabilesRango = $this->contarDiasHabiles($desde, $hasta);
 
-            // Si son el mismo día, cuenta como 1 día exacto (no 1.1)
-            if ($desde->isSameDay($hasta)) {
-                $diasSolicitados = 1;
-            } else {
-                $diasSolicitados = $desde->diffInDays($hasta) + 1;
+        if ($esMedioDia) {
+            if ($tipoSolicitudId !== self::TIPO_CON_GOCE) {
+                return back()->withErrors([
+                    'dias_solicitados' => 'Solo los permisos con goce pueden solicitarse por medio dia.'
+                ])->withInput();
+            }
+
+            if (!$desde->isSameDay($hasta)) {
+                return back()->withErrors([
+                    'fecha_hasta' => 'Un permiso de medio dia debe corresponder a una sola fecha.'
+                ])->withInput();
+            }
+
+            if (!in_array($jornada, ['manana', 'tarde'], true)) {
+                return back()->withErrors([
+                    'jornada' => 'Debe indicar si el medio dia corresponde a manana o tarde.'
+                ])->withInput();
+            }
+
+            $diasSolicitados = 0.5;
+        } elseif (in_array($tipoSolicitudId, [
+            self::TIPO_CON_GOCE,
+            self::TIPO_SIN_GOCE,
+            self::TIPO_DEFUNCION,
+        ], true) && $diasSolicitados !== (float) $diasHabilesRango) {
+            return back()->withErrors([
+                'dias_solicitados' => 'La cantidad de dias debe coincidir con los dias habiles del rango seleccionado.'
+            ])->withInput();
+        }
+
+        if ($tipoSolicitudId === self::TIPO_CON_GOCE && !$esMedioDia && floor($diasSolicitados) !== $diasSolicitados) {
+            return back()->withErrors([
+                'dias_solicitados' => 'Los permisos con goce solo permiten dias completos o medio dia.'
+            ])->withInput();
+        }
+
+        if ($tipoSolicitudId === self::TIPO_CON_GOCE) {
+            $diasDisponibles = $this->obtenerDiasDisponiblesConGoce($usuario->id, $periodoActivo->id);
+
+            if ($diasSolicitados > $diasDisponibles) {
+                return back()->withErrors([
+                    'dias_solicitados' => 'La solicitud excede los dias administrativos disponibles para este ano.'
+                ])->withInput();
             }
         }
 
-        // Ajuste por jornada media
-        $jornada = strtolower(trim($request->jornada));
-        if (preg_match('/medio|media|mañana|tarde|mediod/i', $jornada)) {
-            $diasSolicitados = 0.5;
+        $jefe = $usuario->jefeDirecto;
+
+        if (!$jefe || strtolower($jefe->rol?->nombre ?? '') !== 'jefe_directo') {
+            $jefe = \App\Models\User::whereHas('rol', function ($query) {
+                $query->where('nombre', 'jefe_directo');
+            })->first();
         }
 
-        // Buscar jefe directo dinámicamente (rol_id = 3)
-        $jefe = \App\Models\User::where('rol_id', 3)->first();
-
-        // Si no existe jefe directo, forzamos el ID 3 (Inspector)
         if (!$jefe) {
-            $jefe = \App\Models\User::find(3);
+            return back()->withErrors([
+                'jefe_directo' => 'No hay un director configurado para autorizar esta solicitud.'
+            ])->withInput();
         }
 
-        // Crear la solicitud
         $solicitud = Solicitud::create([
             'user_id' => $usuario->id,
-            'periodo_id' => $periodoActivo->id, 
-            'validador_id' => $jefe?->id, 
-            'tipo_solicitud_id' => $request->tipo_solicitud_id,
-            'estado_solicitud_id' => 1, // Pendiente
+            'periodo_id' => $periodoActivo->id,
+            'validador_id' => $jefe->id,
+            'tipo_solicitud_id' => $tipoSolicitudId,
+            'estado_solicitud_id' => self::ESTADO_PENDIENTE,
             'parentesco_id' => $request->parentesco_id,
             'motivo' => $request->motivo,
-            'fecha_desde' => $request->fecha_desde,
-            'fecha_hasta' => $request->fecha_hasta,
+            'fecha_desde' => $desde->toDateString(),
+            'fecha_hasta' => $hasta->toDateString(),
             'hora_desde' => $request->hora_desde,
             'hora_hasta' => $request->hora_hasta,
-            'dias_solicitados' => $diasSolicitados, 
+            'dias_solicitados' => $diasSolicitados,
             'jornada' => $request->jornada,
             'tipo_vario_id' => $request->tipo_vario_id,
             'fecha_envio' => now(),
             'token_validacion' => Str::uuid(),
         ]);
 
-        /**
-         * AUDITORÍA — SOLO AGREGAMOS ESTO
-         */
         AuditoriaHelper::registrar(
             'solicitudes',
             $solicitud->id,
@@ -213,7 +238,7 @@ class SolicitudController extends Controller
             Auth::user()->id,
             null,
             $solicitud->toArray()
-        ); 
+        );
 
         return redirect()->route('solicitudes.index')
             ->with('success', 'Solicitud enviada correctamente.');
@@ -226,46 +251,71 @@ class SolicitudController extends Controller
     {
         $usuario = auth()->user();
 
-        $solicitud = Solicitud::with(['usuario', 'tipo', 'estado', 'resoluciones','ultimaResolucion'])
+        $solicitud = Solicitud::with(['usuario', 'tipo', 'estado', 'resoluciones', 'ultimaResolucion'])
             ->findOrFail($id);
 
-        // Control de acceso
         if (
-            // Puede verla si es su propia solicitud
             $solicitud->user_id === $usuario->id ||
-
-            // O si es jefe directo y el solicitante es su subordinado
-            ($usuario->rol?->nombre === 'jefe_directo' &&
-            $solicitud->usuario->jefe_directo_id === $usuario->id) ||
-
-            // O si tiene rol secretaria o admin
+            ($usuario->rol?->nombre === 'jefe_directo' && $solicitud->usuario->jefe_directo_id === $usuario->id) ||
             in_array($usuario->rol?->nombre, ['secretaria', 'admin'])
         ) {
             return view('solicitudes.show', compact('solicitud'));
         }
 
-        // Si no cumple ninguna condición
         abort(403, 'Acceso no autorizado.');
     }
 
     public function pdf(Solicitud $solicitud)
     {
-        // Regla mínima: admin/secretaria/inspector_general pueden imprimir
         $user = auth()->user();
-        $rol  = strtolower($user->rol->nombre ?? '');
+        $rol = strtolower($user->rol->nombre ?? '');
 
-        if (!in_array($rol, ['admin','secretaria','inspector_general','jefe_directo'])) {
+        if (!in_array($rol, ['admin', 'secretaria', 'jefe_directo'])) {
             abort(403, 'No tienes permiso para imprimir esta ficha.');
         }
 
-        // Cargamos relaciones útiles para la ficha
-        $solicitud->load(['usuario', 'validador','tipo','estado','ultimaResolucion',]);
+        $solicitud->load(['usuario', 'validador', 'tipo', 'estado', 'ultimaResolucion']);
 
         $pdf = Pdf::loadView('solicitudes.pdf', [
             'solicitud' => $solicitud,
-        ])->setPaper('letter'); // A4 o letter según prefieras
+        ])->setPaper('letter');
 
-        // stream = abre en el navegador; download() si quieres descarga directa
-        return $pdf->stream('permiso_'.$solicitud->id.'.pdf');
+        return $pdf->stream('permiso_' . $solicitud->id . '.pdf');
+    }
+
+    private function obtenerDiasDisponiblesConGoce(int $userId, int $periodoId): float
+    {
+        $diasTomados = Solicitud::where('user_id', $userId)
+            ->where('tipo_solicitud_id', self::TIPO_CON_GOCE)
+            ->where('estado_solicitud_id', self::ESTADO_APROBADO)
+            ->where('periodo_id', $periodoId)
+            ->sum('dias_solicitados');
+
+        return max(self::TOTAL_DIAS_CON_GOCE - $diasTomados, 0);
+    }
+
+    private function contarDiasHabiles(Carbon $desde, Carbon $hasta): int
+    {
+        $feriados = Feriado::pluck('fecha')
+            ->map(fn ($fecha) => Carbon::parse($fecha)->toDateString())
+            ->all();
+
+        $contador = 0;
+        $fecha = $desde->copy();
+
+        while ($fecha->lte($hasta)) {
+            if (!$fecha->isWeekend() && !in_array($fecha->toDateString(), $feriados, true)) {
+                $contador++;
+            }
+
+            $fecha->addDay();
+        }
+
+        return $contador;
+    }
+
+    private function rangoTieneDiasNoHabiles(Carbon $desde, Carbon $hasta): bool
+    {
+        return $this->contarDiasHabiles($desde, $hasta) !== $desde->diffInDays($hasta) + 1;
     }
 }

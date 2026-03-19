@@ -9,7 +9,7 @@
             <i class="bi bi-files text-primary me-3 fs-2"></i>
             <div>
                 <h2 class="mb-1 fw-bold">Solicitud de permisos varios</h2>
-                <p class="text-muted mb-0">Complete el formulario según el tipo de permiso que necesita solicitar</p>
+                <p class="text-muted mb-0">Complete el formulario segun el tipo de permiso que necesita solicitar.</p>
             </div>
         </div>
     </div>
@@ -19,10 +19,9 @@
 
 <form action="{{ route('solicitudes.store') }}" method="POST">
     @csrf
-    <input type="hidden" name="tipo_solicitud_id" value="4"> {{-- ID tipo "Permisos varios" --}}
+    <input type="hidden" name="tipo_solicitud_id" value="4">
 
     <div class="row">
-        <!-- Card Información -->
         <div class="col-lg-5 mb-4">
             <div class="card rounded-3 shadow-sm border-0 h-100">
                 <div class="card-header bg-white border-bottom py-3">
@@ -35,7 +34,7 @@
                 <div class="card-body p-4">
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-muted small">RUT</label>
-                        <p class="form-control-plaintext fw-semibold">{{ Auth::user()->run ?? '—' }}</p>
+                        <p class="form-control-plaintext fw-semibold">{{ Auth::user()->run ?? '-' }}</p>
                     </div>
 
                     <div class="mb-3">
@@ -47,31 +46,26 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-muted small">Correo institucional</label>
-                        <p class="form-control-plaintext">
-                            {{ Auth::user()->correo_institucional ?? '—' }}
-                        </p>
+                        <p class="form-control-plaintext">{{ Auth::user()->correo_institucional ?? '-' }}</p>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-muted small">Cargo</label>
-                        <p class="form-control-plaintext">
-                            {{ Auth::user()->cargo ?? '—' }}
-                        </p>
+                        <p class="form-control-plaintext">{{ Auth::user()->cargo ?? '-' }}</p>
                     </div>
 
                     <div class="mb-0">
-                        <label class="form-label fw-semibold text-muted small">Jefe directo</label>
+                        <label class="form-label fw-semibold text-muted small">Director asignado</label>
                         <p class="form-control-plaintext">
                             {{ Auth::user()->jefeDirecto
-                                ? Auth::user()->jefeDirecto->nombres . ' ' . Auth::user()->jefeDirecto->apellidos . ' — ' . Auth::user()->jefeDirecto->cargo
-                                : '—' }}
+                                ? Auth::user()->jefeDirecto->nombres . ' ' . Auth::user()->jefeDirecto->apellidos . ' - ' . Auth::user()->jefeDirecto->cargo
+                                : '-' }}
                         </p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Card Solicitud -->
         <div class="col-lg-7 mb-4">
             <div class="card rounded-3 shadow-sm border-0 h-100">
                 <div class="card-header bg-white border-bottom py-3">
@@ -82,15 +76,14 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="mb-3">
-                        <label for="tipo_solicitud" class="form-label fw-semibold">Tipo de solicitud <span class="text-danger">*</span></label>
-                        <select class="form-select @error('tipo_vario_id') is-invalid @enderror" 
-                                id="tipo_vario_id" 
-                                name="tipo_vario_id" 
+                        <label for="tipo_vario_id" class="form-label fw-semibold">Tipo de solicitud <span class="text-danger">*</span></label>
+                        <select class="form-select @error('tipo_vario_id') is-invalid @enderror"
+                                id="tipo_vario_id"
+                                name="tipo_vario_id"
                                 required>
                             <option value="">Seleccione el tipo de permiso...</option>
                             @foreach ($tipos_varios as $tipo)
-                                <option value="{{ $tipo->id }}" 
-                                    {{ old('tipo_vario_id') == $tipo->id ? 'selected' : '' }}>
+                                <option value="{{ $tipo->id }}" {{ old('tipo_vario_id') == $tipo->id ? 'selected' : '' }}>
                                     {{ $tipo->nombre }}
                                 </option>
                             @endforeach
@@ -104,7 +97,7 @@
                         <div class="col-md-6 mb-3">
                             <label for="fecha_desde" class="form-label fw-semibold">Desde <span class="text-danger">*</span></label>
                             <input
-                                type="datetime-local"
+                                type="date"
                                 class="form-control @error('fecha_desde') is-invalid @enderror"
                                 id="fecha_desde"
                                 name="fecha_desde"
@@ -119,7 +112,7 @@
                         <div class="col-md-6 mb-3">
                             <label for="fecha_hasta" class="form-label fw-semibold">Hasta <span class="text-danger">*</span></label>
                             <input
-                                type="datetime-local"
+                                type="date"
                                 class="form-control @error('fecha_hasta') is-invalid @enderror"
                                 id="fecha_hasta"
                                 name="fecha_hasta"
@@ -154,10 +147,10 @@
                             class="form-control @error('password') is-invalid @enderror"
                             id="password"
                             name="password"
-                            placeholder="Ingrese su contraseña para confirmar"
+                            placeholder="Ingrese su contraseña actual"
                             required
                         >
-                        <small class="text-muted">Por seguridad, confirme su identidad con su contraseña</small>
+                        <small class="text-muted">Esta validacion confirma la identidad del solicitante.</small>
                         @error('password')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -167,21 +160,20 @@
         </div>
     </div>
 
-    <!-- Botones de acción -->
     <div class="row">
         <div class="col-12">
             <div class="card rounded-3 shadow-sm border-0">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-end gap-2">
-                        <a href="#" class="btn btn-outline-secondary">
+                        <a href="{{ route('solicitudes.index') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-x-circle me-2"></i>
                             Cancelar
                         </a>
                         <button type="submit"
                                 class="btn btn-primary"
                                 data-confirm
-                                data-confirm-title="¿Enviar solicitud?"
-                                data-confirm-text="Se notificará a su jefatura para revisión."
+                                data-confirm-title="Enviar solicitud"
+                                data-confirm-text="La solicitud será enviada a Dirección para su revisión."
                                 data-confirm-btn="Enviar"
                                 data-cancel-btn="Cancelar"
                                 data-confirm-icon="question">
@@ -195,39 +187,38 @@
     </div>
 </form>
 
-<!-- Validación de fines de semana / feriados para datetime-local -->
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const feriados = @json($feriados ?? []);
 
-    function extraerFecha(datetimeValue) {
-        // datetime-local → "2025-05-30T14:30"
-        return datetimeValue ? datetimeValue.split('T')[0] : null;
+    function parseLocalDate(value) {
+        const [y, m, d] = value.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    }
+
+    function formatYmd(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    function esNoHabil(fecha) {
+        const day = fecha.getDay();
+        return day === 0 || day === 6 || feriados.includes(formatYmd(fecha));
     }
 
     function validarFechaNoHabil(input) {
         input.addEventListener('change', function () {
-            const fechaCompleta = this.value;
-            const fecha = extraerFecha(fechaCompleta); // solo la parte YYYY-MM-DD
-
-            if (!fecha) return;
-
-            const dateObj = new Date(fecha + "T00:00:00");
-            const dia = dateObj.getDay(); // 0 = Domingo, 6 = Sábado
-
-            // Bloquear sábado o domingo
-            if (dia === 0 || dia === 6) {
-                alert("Los permisos no se pueden tomar sábados ni domingos.");
-                this.value = "";
+            if (!this.value) return;
+            const fecha = parseLocalDate(this.value);
+            if (esNoHabil(fecha)) {
+                this.value = '';
+                this.classList.add('is-invalid');
                 return;
             }
-
-            // Bloquear feriados exactos
-            if (feriados.includes(fecha)) {
-                alert("La fecha seleccionada corresponde a un feriado.");
-                this.value = "";
-                return;
-            }
+            this.classList.remove('is-invalid');
         });
     }
 
@@ -235,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function () {
     validarFechaNoHabil(document.getElementById('fecha_hasta'));
 });
 </script>
-
+@endpush
 @endsection
 
 @include('components.confirm')

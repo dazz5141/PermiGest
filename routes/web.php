@@ -83,7 +83,7 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | JEFATURA (Secretaria / Inspector General / Director) Reportes mensuales
+    | JEFATURA (Secretaría / Dirección) Reportes mensuales
     |--------------------------------------------------------------------------
     */
     Route::prefix('reportes')->middleware(['auth'])->name('reportes.')->group(function () {
@@ -93,7 +93,7 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | JEFATURA (Inspector General / Director)
+    | DIRECCIÓN
     |--------------------------------------------------------------------------
     | Puede revisar y aprobar/rechazar solicitudes de su equipo.
     |--------------------------------------------------------------------------

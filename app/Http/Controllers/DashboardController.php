@@ -2,27 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
 use App\Models\Solicitud;
-use App\Models\Rol;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
+    private const ESTADO_PENDIENTE = 'Pendiente';
+    private const ESTADO_APROBADO = 'Aprobado';
+    private const ESTADO_RECHAZADO = 'Rechazado';
+
     public function index()
     {
         $usuario = Auth::user();
 
-        // Según el rol, mostramos un dashboard diferente
         switch ($usuario->rol?->nombre ?? '') {
-
-            // ADMINISTRADOR
             case 'admin':
-                $totalUsuarios     = User::count();
-                $totalSolicitudes  = Solicitud::count();
-                $aprobadas         = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'Aprobada'))->count();
-                $rechazadas        = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'Rechazada'))->count();
-                $pendientes        = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'En revisión'))->count();
+                $totalUsuarios = User::count();
+                $totalSolicitudes = Solicitud::count();
+                $aprobadas = Solicitud::whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_APROBADO))->count();
+                $rechazadas = Solicitud::whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_RECHAZADO))->count();
+                $pendientes = Solicitud::whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_PENDIENTE))->count();
 
                 return view('dashboard.admin', compact(
                     'usuario',
@@ -33,36 +33,29 @@ class DashboardController extends Controller
                     'pendientes'
                 ));
 
-            // SECRETARÍA
             case 'secretaria':
-                // Secretaría: resumen general + listado de solicitudes
                 $totalSolicitudes = Solicitud::count();
-                $pendientes = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'En revisión'))->count();
-                $aprobadas = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'Aprobada'))->count();
-
-                // Agregamos el listado de todas las solicitudes con relaciones
+                $pendientes = Solicitud::whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_PENDIENTE))->count();
+                $aprobadas = Solicitud::whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_APROBADO))->count();
                 $solicitudes = Solicitud::with(['usuario', 'tipo', 'estado'])
                     ->orderByDesc('created_at')
                     ->get();
 
                 return view('dashboard.secretaria', compact(
-                    'usuario', 
-                    'totalSolicitudes', 
-                    'pendientes', 
+                    'usuario',
+                    'totalSolicitudes',
+                    'pendientes',
                     'aprobadas',
-                    'solicitudes' 
+                    'solicitudes'
                 ));
 
-            // JEFATURA (Inspector General o similar)
             case 'jefe_directo':
-                // 🔹 Obtener los IDs de los subordinados directos del jefe actual
                 $subordinadosIds = $usuario->subordinados()->pluck('id')->toArray();
-
-                // Si tiene subordinados, obtener sus solicitudes pendientes
                 $pendientes = collect();
+
                 if (!empty($subordinadosIds)) {
                     $pendientes = Solicitud::whereIn('user_id', $subordinadosIds)
-                        ->where('estado_solicitud_id', 1) // 1 = Pendiente o En revisión
+                        ->whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_PENDIENTE))
                         ->with(['usuario', 'tipo', 'estado'])
                         ->orderByDesc('created_at')
                         ->get();
@@ -70,12 +63,17 @@ class DashboardController extends Controller
 
                 return view('dashboard.jefatura', compact('usuario', 'pendientes'));
 
-            // FUNCIONARIO (Docente o Asistente)
             default:
                 $total = $usuario->solicitudes()->count();
-                $enRevision = $usuario->solicitudes()->whereHas('estado', fn($q) => $q->where('nombre', 'En revisión'))->count();
-                $aprobadas = $usuario->solicitudes()->whereHas('estado', fn($q) => $q->where('nombre', 'Aprobada'))->count();
-                $rechazadas = $usuario->solicitudes()->whereHas('estado', fn($q) => $q->where('nombre', 'Rechazada'))->count();
+                $enRevision = $usuario->solicitudes()
+                    ->whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_PENDIENTE))
+                    ->count();
+                $aprobadas = $usuario->solicitudes()
+                    ->whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_APROBADO))
+                    ->count();
+                $rechazadas = $usuario->solicitudes()
+                    ->whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_RECHAZADO))
+                    ->count();
 
                 return view('dashboard.funcionario', compact('usuario', 'total', 'enRevision', 'aprobadas', 'rechazadas'));
         }

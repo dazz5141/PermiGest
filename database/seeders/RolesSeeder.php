@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Rol;
 use Illuminate\Database\Seeder;
-use App\Models\Rol; // ✅ usa tu modelo real
 
 class RolesSeeder extends Seeder
 {
@@ -12,19 +12,19 @@ class RolesSeeder extends Seeder
         $roles = [
             [
                 'nombre' => 'admin',
-                'descripcion' => 'Administrador general del sistema. Tiene acceso completo a todos los módulos.',
+                'descripcion' => 'Administrador general del sistema. Tiene acceso completo a todos los modulos.',
             ],
             [
                 'nombre' => 'secretaria',
-                'descripcion' => 'Encargada de registrar y administrar permisos, solicitudes y documentación.',
+                'descripcion' => 'Encargada de registrar y administrar permisos, solicitudes y documentacion.',
             ],
             [
                 'nombre' => 'jefe_directo',
-                'descripcion' => 'Valida o rechaza permisos de su equipo (por ejemplo, Inspector General).',
+                'descripcion' => 'Director del establecimiento que aprueba o rechaza solicitudes de permiso.',
             ],
             [
                 'nombre' => 'funcionario',
-                'descripcion' => 'Usuario estándar que solicita permisos (por ejemplo, docentes).',
+                'descripcion' => 'Usuario estandar que solicita permisos administrativos.',
             ],
         ];
 

@@ -9,7 +9,7 @@
             <i class="bi bi-file-earmark-minus text-primary me-3 fs-2"></i>
             <div>
                 <h2 class="mb-1 fw-bold">Solicitud de permiso administrativo sin goce de sueldo</h2>
-                <p class="text-muted mb-0">Complete el formulario para solicitar su permiso administrativo</p>
+                <p class="text-muted mb-0">Complete el formulario para solicitar su permiso administrativo.</p>
             </div>
         </div>
     </div>
@@ -22,7 +22,6 @@
     <input type="hidden" name="tipo_solicitud_id" value="2">
 
     <div class="row">
-        <!-- Card Información -->
         <div class="col-lg-6 mb-4">
             <div class="card rounded-3 shadow-sm border-0 h-100">
                 <div class="card-header bg-white border-bottom py-3">
@@ -35,7 +34,7 @@
                 <div class="card-body p-4">
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-muted small">RUT</label>
-                        <p class="form-control-plaintext fw-semibold">{{ Auth::user()->run ?? '—' }}</p>
+                        <p class="form-control-plaintext fw-semibold">{{ Auth::user()->run ?? '-' }}</p>
                     </div>
 
                     <div class="mb-3">
@@ -47,31 +46,26 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-muted small">Correo institucional</label>
-                        <p class="form-control-plaintext">
-                            {{ Auth::user()->correo_institucional ?? '—' }}
-                        </p>
+                        <p class="form-control-plaintext">{{ Auth::user()->correo_institucional ?? '-' }}</p>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-muted small">Cargo</label>
-                        <p class="form-control-plaintext">
-                            {{ Auth::user()->cargo ?? '—' }}
-                        </p>
+                        <p class="form-control-plaintext">{{ Auth::user()->cargo ?? '-' }}</p>
                     </div>
 
                     <div class="mb-0">
-                        <label class="form-label fw-semibold text-muted small">Jefe directo</label>
+                        <label class="form-label fw-semibold text-muted small">Director asignado</label>
                         <p class="form-control-plaintext">
                             {{ Auth::user()->jefeDirecto
-                                ? Auth::user()->jefeDirecto->nombres . ' ' . Auth::user()->jefeDirecto->apellidos . ' — ' . Auth::user()->jefeDirecto->cargo
-                                : '—' }}
+                                ? Auth::user()->jefeDirecto->nombres . ' ' . Auth::user()->jefeDirecto->apellidos . ' - ' . Auth::user()->jefeDirecto->cargo
+                                : '-' }}
                         </p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Card Información importante -->
         <div class="col-lg-6 mb-4">
             <div class="card rounded-3 shadow-sm border-0">
                 <div class="card-header bg-white border-bottom py-3">
@@ -93,10 +87,10 @@
                         <div class="card-body">
                             <h6 class="fw-semibold mb-3">Requisitos:</h6>
                             <ul class="mb-0 small">
-                                <li class="mb-2">Solicitud con mínimo 15 días de anticipación</li>
-                                <li class="mb-2">Justificación detallada del motivo</li>
-                                <li class="mb-2">Solo días completos (no se permite medio día)</li>
-                                <li class="mb-0">Aprobación de jefatura directa</li>
+                                <li class="mb-2">Solicitud con anticipación suficiente para su evaluación.</li>
+                                <li class="mb-2">Justificación detallada del motivo.</li>
+                                <li class="mb-2">Solo días completos.</li>
+                                <li class="mb-0">Autorización de Dirección.</li>
                             </ul>
                         </div>
                     </div>
@@ -105,7 +99,6 @@
         </div>
     </div>
 
-    <!-- Card Solicitud -->
     <div class="row">
         <div class="col-12">
             <div class="card rounded-3 shadow-sm border-0">
@@ -124,10 +117,10 @@
                                 id="motivo"
                                 name="motivo"
                                 rows="6"
-                                placeholder="Describa detalladamente el motivo de su solicitud de permiso..."
+                                placeholder="Describa detalladamente el motivo de su solicitud..."
                                 required
                             >{{ old('motivo') }}</textarea>
-                            <small class="text-muted">Es importante que justifique su solicitud de manera clara y completa.</small>
+                            <small class="text-muted">Es importante justificar su solicitud de manera clara y completa.</small>
                             @error('motivo')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -135,10 +128,10 @@
 
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="dias" class="form-label fw-semibold">Cantidad de días completos <span class="text-danger">*</span></label>
+                                <label for="dias_solicitados" class="form-label fw-semibold">Cantidad de días completos <span class="text-danger">*</span></label>
                                 <input
                                     type="number"
-                                    class="form-control @error('dias') is-invalid @enderror"
+                                    class="form-control @error('dias_solicitados') is-invalid @enderror"
                                     id="dias_solicitados"
                                     name="dias_solicitados"
                                     min="1"
@@ -146,18 +139,15 @@
                                     value="{{ old('dias_solicitados') }}"
                                     required
                                 >
-                                <small class="text-muted">Solo días completos, no se permite medio día</small>
+                                <small class="text-muted">No se permite medio día en este tipo de permiso.</small>
                                 @error('dias_solicitados')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            <!-- Fechas -->
-                            <div class="row mt-2 align-items-start">
+                            <div class="row mt-2">
                                 <div class="col-md-6 mb-3">
-                                    <label for="fecha_desde" class="form-label fw-semibold">
-                                        Desde <span class="text-danger">*</span>
-                                    </label>
+                                    <label for="fecha_desde" class="form-label fw-semibold">Desde <span class="text-danger">*</span></label>
                                     <input type="date"
                                         class="form-control @error('fecha_desde') is-invalid @enderror"
                                         id="fecha_desde"
@@ -170,9 +160,7 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="fecha_hasta" class="form-label fw-semibold">
-                                        Hasta <span class="text-danger">*</span>
-                                    </label>
+                                    <label for="fecha_hasta" class="form-label fw-semibold">Hasta <span class="text-danger">*</span></label>
                                     <input type="date"
                                         class="form-control @error('fecha_hasta') is-invalid @enderror"
                                         id="fecha_hasta"
@@ -195,10 +183,10 @@
                                 class="form-control @error('password') is-invalid @enderror"
                                 id="password"
                                 name="password"
-                                placeholder="Ingrese su contraseña para confirmar"
+                                placeholder="Ingrese su contraseña actual"
                                 required
                             >
-                            <small class="text-muted">Por seguridad, confirme su identidad con su contraseña</small>
+                            <small class="text-muted">Esta validación confirma la identidad del solicitante.</small>
                             @error('password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -209,15 +197,15 @@
                         <div class="col-12">
                             <hr class="mb-4">
                             <div class="d-flex justify-content-end gap-2">
-                                <a href="#" class="btn btn-outline-secondary">
+                                <a href="{{ route('solicitudes.index') }}" class="btn btn-outline-secondary">
                                     <i class="bi bi-x-circle me-2"></i>
                                     Cancelar
                                 </a>
                                 <button type="submit"
                                         class="btn btn-primary"
                                         data-confirm
-                                        data-confirm-title="¿Enviar solicitud?"
-                                        data-confirm-text="Se notificará a su jefatura para revisión."
+                                        data-confirm-title="Enviar solicitud"
+                                        data-confirm-text="La solicitud será enviada a Dirección para su revisión."
                                         data-confirm-btn="Enviar"
                                         data-cancel-btn="Cancelar"
                                         data-confirm-icon="question">
@@ -232,83 +220,48 @@
         </div>
     </div>
 </form>
+
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const diasInput   = document.getElementById('dias_solicitados');
-  const fechaDesde  = document.getElementById('fecha_desde');
-  const fechaHasta  = document.getElementById('fecha_hasta');
+    const diasInput = document.getElementById('dias_solicitados');
+    const fechaDesde = document.getElementById('fecha_desde');
+    const fechaHasta = document.getElementById('fecha_hasta');
 
-  // Parsear YYYY-MM-DD a Date local (evita el bug de UTC)
-  function parseLocalDate(yyyyMmDd) {
-    const [y, m, d] = yyyyMmDd.split('-').map(Number);
-    return new Date(y, m - 1, d); // <-- local
-  }
-
-  // Formatear Date a YYYY-MM-DD sin usar toISOString()
-  function formatYmd(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }
-
-  function calcularFechaHasta() {
-    const dias  = parseInt(diasInput.value || 0, 10);
-    const desde = fechaDesde.value; // siempre viene en YYYY-MM-DD
-
-    if (!dias || !desde) {
-      fechaHasta.value = '';
-      return;
+    function parseLocalDate(value) {
+        const [y, m, d] = value.split('-').map(Number);
+        return new Date(y, m - 1, d);
     }
 
-    const inicio = parseLocalDate(desde);     // ← local
-    const fin    = new Date(inicio);
-    fin.setDate(inicio.getDate() + (dias - 1)); // rango inclusivo
-
-    fechaHasta.value = formatYmd(fin);        // ← sin UTC
-  }
-
-  diasInput.addEventListener('input',  calcularFechaHasta);
-  diasInput.addEventListener('change', calcularFechaHasta);
-  fechaDesde.addEventListener('change', calcularFechaHasta);
-
-  // si ya viene algo desde old(), recalcula al cargar
-  calcularFechaHasta();
-});
-</script>
-
-<!-- Validación de fines de semana / feriados -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const feriados = @json($feriados ?? []);
-
-    function validarFechaNoHabil(input) {
-        input.addEventListener('change', function () {
-            if (!this.value) return;
-
-            const fecha = new Date(this.value + "T00:00:00");
-            const dia = fecha.getDay();
-
-            if (dia === 0 || dia === 6) {
-                alert("Los permisos no se pueden tomar sábados ni domingos.");
-                this.value = "";
-                return;
-            }
-
-            if (feriados.includes(this.value)) {
-                alert("La fecha seleccionada corresponde a un feriado.");
-                this.value = "";
-                return;
-            }
-        });
+    function formatYmd(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
     }
 
-    validarFechaNoHabil(document.getElementById('fecha_desde'));
-    validarFechaNoHabil(document.getElementById('fecha_hasta'));
+    function calcularFechaHasta() {
+        const dias = parseInt(diasInput.value || 0, 10);
+        const desde = fechaDesde.value;
+
+        if (!dias || !desde) {
+            fechaHasta.value = '';
+            return;
+        }
+
+        const inicio = parseLocalDate(desde);
+        const fin = new Date(inicio);
+        fin.setDate(inicio.getDate() + (dias - 1));
+        fechaHasta.value = formatYmd(fin);
+    }
+
+    diasInput.addEventListener('input', calcularFechaHasta);
+    diasInput.addEventListener('change', calcularFechaHasta);
+    fechaDesde.addEventListener('change', calcularFechaHasta);
+    calcularFechaHasta();
 });
 </script>
-
+@endpush
 @endsection
 
 @include('components.confirm')
-

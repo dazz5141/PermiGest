@@ -5,27 +5,26 @@
 <title>Ficha de Permiso #{{ $solicitud->id }}</title>
 <style>
   * { font-family: DejaVu Sans, Arial, sans-serif; font-size: 12px; }
-  .w-100{ width:100%; } .mt-1{ margin-top:6px; } .mt-2{ margin-top:12px; }
-  .mb-1{ margin-bottom:6px; } .mb-2{ margin-bottom:12px; }
-  .text-center{ text-align:center; } .text-right{ text-align:right; }
-  .border{ border:1px solid #333; } .p-1{ padding:8px; }
-  .title{ font-weight:700; font-size:16px; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border:1px solid #333; padding:6px; vertical-align:top; }
+  .w-100 { width: 100%; }
+  .mt-2 { margin-top: 12px; }
+  .mb-2 { margin-bottom: 12px; }
+  .text-center { text-align: center; }
   .small { font-size: 11px; color: #555; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #333; padding: 6px; vertical-align: top; }
   .firmas td { height: 70px; }
 </style>
 </head>
 <body>
   <div class="text-center mb-2">
-    <div class="title">FICHA DE PERMISO</div>
+    <div style="font-weight:700; font-size:16px;">FICHA DE PERMISO</div>
     <div class="small">Establecimiento: ______________________________</div>
   </div>
 
   <table class="mb-2">
     <tr>
       <th style="width: 35%;">Funcionario</th>
-      <td>{{ $solicitud->usuario->nombres ?? '' }} {{ $solicitud->funcionario->apellidos ?? '' }}</td>
+      <td>{{ $solicitud->usuario->nombres ?? '' }} {{ $solicitud->usuario->apellidos ?? '' }}</td>
     </tr>
     <tr>
       <th>RUT</th>
@@ -33,40 +32,40 @@
     </tr>
     <tr>
       <th>Correo</th>
-      <td>{{ $solicitud->usuario->correo_institucional ?? $solicitud->funcionario->email ?? '' }}</td>
+      <td>{{ $solicitud->usuario->correo_institucional ?? '' }}</td>
     </tr>
     <tr>
-      <th>Cargo / Unidad</th>
-      <td>{{ $solicitud->usuario->cargo ?? '' }} / {{ $solicitud->funcionario->unidad ?? '' }}</td>
+      <th>Cargo</th>
+      <td>{{ $solicitud->usuario->cargo ?? '' }}</td>
     </tr>
   </table>
 
   <table class="mb-2">
     <tr>
-      <th style="width: 35%;">Tipo de Permiso</th>
-      <td>{{ $solicitud->tipo?->nombre ?? '—' }}</td>
+      <th style="width: 35%;">Tipo de permiso</th>
+      <td>{{ $solicitud->tipo?->nombre ?? '-' }}</td>
     </tr>
     <tr>
       <th>Desde</th>
-      <td>{{ \Carbon\Carbon::parse($solicitud->fecha_desde)->format('d-m-Y') }}</td>
+      <td>{{ $solicitud->fecha_desde?->format('d-m-Y') ?? '-' }}</td>
     </tr>
     <tr>
       <th>Hasta</th>
-      <td>{{ \Carbon\Carbon::parse($solicitud->fecha_hasta)->format('d-m-Y') }}</td>
+      <td>{{ $solicitud->fecha_hasta?->format('d-m-Y') ?? '-' }}</td>
     </tr>
     <tr>
       <th>Días</th>
-      <td>{{ $solicitud->dias_solicitados ?? $solicitud->dias ?? '—' }}</td>
+      <td>{{ $solicitud->dias_solicitados ?? '-' }}</td>
     </tr>
     @if(!empty($solicitud->hora_desde) || !empty($solicitud->hora_hasta))
       <tr>
         <th>Horario</th>
-        <td>{{ $solicitud->hora_desde }} – {{ $solicitud->hora_hasta }}</td>
+        <td>{{ $solicitud->hora_desde }} - {{ $solicitud->hora_hasta }}</td>
       </tr>
     @endif
     <tr>
       <th>Detalle / Observaciones</th>
-      <td>{{ $solicitud->ultimaResolucion?->comentario ?? $solicitud->motivo ?? $solicitud->observaciones ?? '—' }}</td>
+      <td>{{ $solicitud->ultimaResolucion?->comentario ?? $solicitud->motivo ?? $solicitud->observaciones ?? '-' }}</td>
     </tr>
   </table>
 
@@ -76,15 +75,17 @@
       <td>{{ $solicitud->estado?->nombre ?? 'Pendiente' }}</td>
     </tr>
     <tr>
-      <th>Revisado por (Jefatura)</th>
+      <th>Resuelto por (Dirección)</th>
       <td>{{ $solicitud->validador->nombres ?? '' }} {{ $solicitud->validador->apellidos ?? '' }}</td>
     </tr>
     <tr>
-      <th>Fecha de Resolución</th>
+      <th>Fecha de resolución</th>
       <td>
-        @if(!empty($solicitud->updated_at))
-          {{ \Carbon\Carbon::parse($solicitud->updated_at)->format('d-m-Y H:i') }}
-        @else — @endif
+        @if(!empty($solicitud->fecha_revision))
+          {{ \Carbon\Carbon::parse($solicitud->fecha_revision)->format('d-m-Y H:i') }}
+        @else
+          -
+        @endif
       </td>
     </tr>
   </table>
@@ -97,7 +98,7 @@
       </td>
       <td class="text-center">
         ________________________________<br>
-        Jefatura Directa
+        Dirección del Establecimiento
       </td>
       <td class="text-center">
         ________________________________<br>
@@ -106,8 +107,8 @@
     </tr>
   </table>
 
-    <div class="small mt-2 text-muted">
-        Ficha N° {{ str_pad($solicitud->id, 4, '0', STR_PAD_LEFT) }} · Generado el {{ now()->format('d-m-Y H:i') }}
-    </div>
+  <div class="small mt-2">
+    Ficha N. {{ str_pad($solicitud->id, 4, '0', STR_PAD_LEFT) }} - Generado el {{ now()->format('d-m-Y H:i') }}
+  </div>
 </body>
 </html>

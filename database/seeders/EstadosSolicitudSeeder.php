@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\EstadoSolicitud;
+use Illuminate\Database\Seeder;
 
 class EstadosSolicitudSeeder extends Seeder
 {
@@ -11,14 +11,13 @@ class EstadosSolicitudSeeder extends Seeder
     {
         $estados = [
             ['nombre' => 'Pendiente'],
-            ['nombre' => 'En revisión'],
             ['nombre' => 'Aprobado'],
             ['nombre' => 'Rechazado'],
             ['nombre' => 'Anulado'],
         ];
 
         foreach ($estados as $estado) {
-            \App\Models\EstadoSolicitud::firstOrCreate(['nombre' => $estado['nombre']]);
+            EstadoSolicitud::firstOrCreate(['nombre' => $estado['nombre']]);
         }
     }
 }

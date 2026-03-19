@@ -31,12 +31,22 @@
                 </thead>
                 <tbody>
                     @forelse($usuarios as $u)
+                        @php
+                            $rolNombre = $u->rol?->nombre ?? '-';
+                            $rolMostrado = match($rolNombre) {
+                                'admin' => 'Admin',
+                                'secretaria' => 'Secretaria',
+                                'jefe_directo' => 'Director',
+                                'funcionario' => 'Funcionario',
+                                default => $rolNombre,
+                            };
+                        @endphp
                         <tr>
                             <td>{{ $u->nombre_completo }}</td>
                             <td>{{ $u->run }}</td>
                             <td>{{ $u->correo_institucional }}</td>
-                            <td>{{ $u->rol?->nombre ?? '—' }}</td>
-                            <td>{{ $u->cargo ?? '—' }}</td>
+                            <td>{{ $rolMostrado }}</td>
+                            <td>{{ $u->cargo ?? '-' }}</td>
                             <td>
                                 @if($u->activo)
                                     <span class="badge bg-success">Activo</span>
@@ -54,7 +64,7 @@
                                     <button type="submit"
                                             class="btn btn-sm {{ $u->activo ? 'btn-danger' : 'btn-success' }}"
                                             data-confirm
-                                            data-confirm-title="{{ $u->activo ? '¿Deshabilitar usuario?' : '¿Habilitar usuario?' }}"
+                                            data-confirm-title="{{ $u->activo ? 'Deshabilitar usuario?' : 'Habilitar usuario?' }}"
                                             data-confirm-text="{{ $u->activo ? 'El usuario no podrá acceder al sistema.' : 'El usuario podrá volver a iniciar sesión.' }}"
                                             data-confirm-btn="Sí, confirmar"
                                             data-cancel-btn="Cancelar"
@@ -81,7 +91,6 @@
     </div>
 </div>
 
-<!-- Modal Nuevo Usuario -->
 <div class="modal fade" id="crearUsuarioModal" tabindex="-1" aria-labelledby="crearUsuarioLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <form id="formCrearUsuario" class="modal-content" method="POST" action="{{ route('admin.usuarios.store') }}">
@@ -121,14 +130,16 @@
                         <select class="form-select" name="rol_id" required>
                             <option value="">Seleccione...</option>
                             @foreach($roles as $r)
-                                <option value="{{ $r->id }}">{{ $r->nombre }}</option>
+                                <option value="{{ $r->id }}">
+                                    {{ $r->nombre === 'jefe_directo' ? 'Director' : ucfirst(str_replace('_', ' ', $r->nombre)) }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Jefe directo</label>
+                        <label class="form-label">Director asignado</label>
                         <select class="form-select" name="jefe_directo_id">
-                            <option value="">Sin jefe directo</option>
+                            <option value="">Sin director asignado</option>
                             @foreach($jefes as $j)
                                 <option value="{{ $j->id }}">{{ $j->nombre_completo }}</option>
                             @endforeach
@@ -145,17 +156,14 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save me-1"></i> Guardar
-                    </button>
-                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i> Guardar
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal global Restablecer Contraseña -->
 <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <form id="resetPasswordForm" class="modal-content" method="POST">
@@ -180,11 +188,9 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check2-circle me-1"></i> Guardar
-                    </button>
-                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check2-circle me-1"></i> Guardar
+                </button>
             </div>
         </form>
     </div>
@@ -207,19 +213,17 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-
     let runValido = false;
 
     const modal = document.getElementById('crearUsuarioModal');
-    const form  = document.getElementById('formCrearUsuario');
+    const form = document.getElementById('formCrearUsuario');
 
     modal.addEventListener('shown.bs.modal', function () {
-
         if (!$('#run').data('rut-init')) {
-
             $('#run').Rut({
                 format: false,
                 validation: true,
@@ -242,7 +246,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // 🚨 BLOQUEAR ENVÍO SI RUN ES INVÁLIDO
     form.addEventListener('submit', function (e) {
         if (!runValido) {
             e.preventDefault();
@@ -259,7 +262,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         }
     });
-
 });
 </script>
 @endpush

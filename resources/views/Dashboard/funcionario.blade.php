@@ -32,7 +32,7 @@
             <div class="card shadow-sm border-0 rounded-3">
                 <div class="card-body text-center">
                     <i class="bi bi-hourglass-split text-warning fs-1 mb-2"></i>
-                    <h6 class="fw-semibold mb-0">En revisión</h6>
+                    <h6 class="fw-semibold mb-0">Pendientes</h6>
                     <p class="text-muted fs-4 fw-bold mt-2">{{ $enRevision ?? 0 }}</p>
                 </div>
             </div>

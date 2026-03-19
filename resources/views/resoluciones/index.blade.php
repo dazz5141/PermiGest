@@ -1,61 +1,150 @@
 @extends('layouts.app')
 
-@section('title', 'Panel de revisión - PermiGest Escolar')
+@section('title', 'Resolución de Solicitudes - Dirección')
 
 @section('content')
 <div class="container-fluid py-4">
     <div class="d-flex align-items-center mb-4">
         <i class="bi bi-journal-check text-primary me-3 fs-3"></i>
-        <h4 class="fw-bold mb-0">Revisión y Aprobación de Permisos</h4>
+        <h4 class="fw-bold mb-0">Resolución de Solicitudes</h4>
     </div>
 
-    <div class="card shadow-sm border-0 rounded-3">
+    <div class="alert alert-light border-start border-4 border-primary shadow-sm mb-4">
+        <i class="bi bi-person-workspace me-2"></i>
+        Bienvenido(a), <strong>{{ $usuario->nombres }} {{ $usuario->apellidos }}</strong>.
+        <span class="text-muted">Módulo exclusivo de Dirección para aprobar o rechazar permisos.</span>
+    </div>
+
+    @include('components.alertas')
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold mb-0">
+                <i class="bi bi-clipboard-check text-primary me-2"></i>
+                Solicitudes pendientes ({{ $pendientes->count() }})
+            </h5>
+        </div>
+
         <div class="card-body">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Funcionario</th>
-                        <th>Tipo</th>
-                        <th>Fechas</th>
-                        <th>Motivo</th>
-                        <th>Estado</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>0008</td>
-                        <td>María Soto</td>
-                        <td>Permiso con goce</td>
-                        <td>25/10 - 26/10</td>
-                        <td>Trámite médico</td>
-                        <td><span class="badge bg-warning text-dark">Pendiente</span></td>
-                        <td>
-                            <a href="#" class="btn btn-success btn-sm">
-                                <i class="bi bi-check-lg"></i> Aprobar
-                            </a>
-                            <a href="#" class="btn btn-danger btn-sm">
-                                <i class="bi bi-x-lg"></i> Rechazar
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>0009</td>
-                        <td>Carlos Rivera</td>
-                        <td>Permiso sin goce</td>
-                        <td>01/11 - 04/11</td>
-                        <td>Viaje personal</td>
-                        <td><span class="badge bg-success">Aprobado</span></td>
-                        <td>
-                            <a href="#" class="btn btn-outline-secondary btn-sm">
-                                <i class="bi bi-eye"></i> Ver
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            @if($pendientes->isEmpty())
+                <p class="text-muted mb-0">No hay solicitudes pendientes por resolver.</p>
+            @else
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Funcionario</th>
+                                <th>Tipo</th>
+                                <th>Desde</th>
+                                <th>Hasta</th>
+                                <th>Días</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($pendientes as $solicitud)
+                                <tr>
+                                    <td>{{ $solicitud->usuario->nombres }} {{ $solicitud->usuario->apellidos }}</td>
+                                    <td>{{ $solicitud->tipo->nombre }}</td>
+                                    <td>{{ $solicitud->fecha_desde?->format('d/m/Y') }}</td>
+                                    <td>{{ $solicitud->fecha_hasta?->format('d/m/Y') }}</td>
+                                    <td>{{ $solicitud->dias_solicitados }}</td>
+                                    <td>
+                                        <span class="badge bg-warning text-dark">{{ $solicitud->estado->nombre }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-inline-flex align-items-center gap-2">
+                                            <a href="{{ route('solicitudes.show', $solicitud->id) }}"
+                                               class="btn btn-sm btn-outline-primary px-2">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+
+                                            <a href="{{ route('solicitudes.pdf', $solicitud->id) }}"
+                                               target="_blank"
+                                               class="btn btn-sm btn-outline-secondary px-2">
+                                                <i class="bi bi-printer"></i>
+                                            </a>
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-success px-3"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalResolucion"
+                                                    data-id="{{ $solicitud->id }}"
+                                                    data-accion="aprobado">
+                                                <i class="bi bi-check-circle"></i> Aprobar
+                                            </button>
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-danger px-3"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalResolucion"
+                                                    data-id="{{ $solicitud->id }}"
+                                                    data-accion="rechazado">
+                                                <i class="bi bi-x-circle"></i> Rechazar
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalResolucion" tabindex="-1" aria-labelledby="modalResolucionLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form id="formResolucion" method="POST" class="modal-content shadow-lg border-0 rounded-4">
+                @csrf
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold" id="modalResolucionLabel">
+                        <i class="bi bi-pencil-square text-primary me-2"></i> Resolver solicitud
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" name="accion" id="accionInput">
+                    <div class="mb-3">
+                        <label for="comentario" class="form-label fw-semibold">Comentario (opcional)</label>
+                        <textarea class="form-control" id="comentario" name="comentario" rows="4"
+                            placeholder="Escriba observaciones o fundamentos de su decisión..."></textarea>
+                    </div>
+                    <div class="alert alert-info small mb-0">
+                        <i class="bi bi-info-circle me-1"></i> Esta resolución será registrada en el sistema.
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i> Confirmar resolución
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('modalResolucion');
+    const form = document.getElementById('formResolucion');
+    const accionInput = document.getElementById('accionInput');
+
+    modal.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget;
+        const id = button.getAttribute('data-id');
+        const accion = button.getAttribute('data-accion');
+        accionInput.value = accion;
+        form.action = `/resoluciones/${id}`;
+    });
+});
+</script>
 @endsection
+
+@include('components.confirm')

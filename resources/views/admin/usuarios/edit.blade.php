@@ -23,9 +23,7 @@
                     <div class="col-md-4">
                         <label class="form-label">RUN</label>
                         <input type="text" class="form-control" name="run" value="{{ $usuario->run }}" readonly>
-                        <small class="text-muted">
-                            El RUN no puede ser modificado.
-                        </small>
+                        <small class="text-muted">El RUN no puede ser modificado.</small>
                     </div>
                     <div class="col-md-8">
                         <label class="form-label">Correo institucional</label>
@@ -51,14 +49,16 @@
                         <label class="form-label">Rol</label>
                         <select class="form-select" name="rol_id" required>
                             @foreach($roles as $r)
-                                <option value="{{ $r->id }}" @selected($usuario->rol_id == $r->id)>{{ $r->nombre }}</option>
+                                <option value="{{ $r->id }}" @selected($usuario->rol_id == $r->id)}>
+                                    {{ $r->nombre === 'jefe_directo' ? 'Director' : ucfirst(str_replace('_', ' ', $r->nombre)) }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Jefe directo</label>
+                        <label class="form-label">Director asignado</label>
                         <select class="form-select" name="jefe_directo_id">
-                            <option value="">Sin jefe directo</option>
+                            <option value="">Sin director asignado</option>
                             @foreach($jefes as $j)
                                 <option value="{{ $j->id }}" @selected($usuario->jefe_directo_id == $j->id)>{{ $j->nombre_completo }}</option>
                             @endforeach

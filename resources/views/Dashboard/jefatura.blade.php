@@ -1,26 +1,23 @@
 @extends('layouts.app')
 
-@section('title', 'Panel de Jefatura - PermiGest Escolar')
+@section('title', 'Panel de Dirección - PermiGest Escolar')
 
 @section('content')
 <div class="container-fluid py-4">
 
-    {{-- Encabezado --}}
     <div class="d-flex align-items-center mb-4">
         <i class="bi bi-briefcase text-primary me-3 fs-3"></i>
-        <h4 class="fw-bold mb-0">Panel de Jefatura</h4>
+        <h4 class="fw-bold mb-0">Panel de Dirección</h4>
     </div>
 
-    {{-- Bienvenida --}}
     <div class="alert alert-light border-start border-4 border-primary shadow-sm mb-4">
         <i class="bi bi-person-workspace me-2"></i>
         Bienvenido(a), <strong>{{ $usuario->nombres }} {{ $usuario->apellidos }}</strong>.
-        <span class="text-muted">Cargo: {{ $usuario->cargo ?? 'Jefatura Directa' }}</span>
+        <span class="text-muted">Cargo: {{ $usuario->cargo ?? 'Director del establecimiento' }}</span>
     </div>
 
     @include('components.alertas')
 
-    {{-- Tarjetas de resumen --}}
     <div class="row g-4 mb-4">
         <div class="col-md-4">
             <div class="card shadow-sm border-0 rounded-3">
@@ -37,7 +34,7 @@
                     <i class="bi bi-check-circle text-success fs-1 mb-2"></i>
                     <h6 class="fw-semibold mb-0">Aprobadas</h6>
                     <p class="text-muted fs-4 fw-bold mt-2">
-                        {{ \App\Models\Solicitud::whereIn('user_id', $usuario->subordinados()->pluck('id'))->whereHas('estado', fn($q)=>$q->where('nombre','Aprobada'))->count() }}
+                        {{ \App\Models\Solicitud::whereIn('user_id', $usuario->subordinados()->pluck('id'))->whereHas('estado', fn($q) => $q->where('nombre', 'Aprobado'))->count() }}
                     </p>
                 </div>
             </div>
@@ -48,14 +45,13 @@
                     <i class="bi bi-x-circle text-danger fs-1 mb-2"></i>
                     <h6 class="fw-semibold mb-0">Rechazadas</h6>
                     <p class="text-muted fs-4 fw-bold mt-2">
-                        {{ \App\Models\Solicitud::whereIn('user_id', $usuario->subordinados()->pluck('id'))->whereHas('estado', fn($q)=>$q->where('nombre','Rechazada'))->count() }}
+                        {{ \App\Models\Solicitud::whereIn('user_id', $usuario->subordinados()->pluck('id'))->whereHas('estado', fn($q) => $q->where('nombre', 'Rechazado'))->count() }}
                     </p>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Reporte mensual --}}
     <div class="card shadow-sm border-0 rounded-4 mb-4">
         <div class="card-header bg-white py-3">
             <h5 class="fw-bold mb-0">
@@ -64,22 +60,22 @@
             </h5>
         </div>
         <div class="card-body">
-            <p class="text-muted">Desde este módulo puede descargar un resumen mensual de las solicitudes revisadas bajo su supervisión.</p>
+            <p class="text-muted">Desde este módulo puede descargar un resumen mensual de las solicitudes revisadas por Dirección.</p>
 
             <form action="{{ route('reportes.mensual') }}" method="GET" target="_blank" class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label for="mes" class="form-label fw-semibold">Seleccione mes</label>
                     <select id="mes" name="mes" class="form-select">
                         @foreach(range(1, 12) as $m)
-                            <option value="{{ $m }}" {{ (int)$m === (int)date('m') ? 'selected' : '' }}>
+                            <option value="{{ $m }}" {{ (int) $m === (int) date('m') ? 'selected' : '' }}>
                                 {{ \Carbon\Carbon::create()->month($m)->locale('es')->monthName }}
                             </option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label for="año" class="form-label fw-semibold">Seleccione año</label>
-                    <input type="number" id="año" name="año" value="{{ now()->year }}" class="form-control">
+                    <label for="anio" class="form-label fw-semibold">Seleccione año</label>
+                    <input type="number" id="anio" name="año" value="{{ now()->year }}" class="form-control">
                 </div>
                 <div class="col-md-4">
                     <button type="submit"
@@ -98,7 +94,6 @@
         </div>
     </div>
 
-    {{-- Tabla de solicitudes pendientes --}}
     <div class="card shadow-sm border-0 rounded-4">
         <div class="card-header bg-white py-3">
             <h5 class="fw-bold mb-0">
@@ -139,15 +134,14 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="d-inline-flex align-items-center gap-2">
-
                                             <a href="{{ route('solicitudes.show', $solicitud->id) }}"
-                                            class="btn btn-sm btn-outline-primary px-2">
+                                               class="btn btn-sm btn-outline-primary px-2">
                                                 <i class="bi bi-eye"></i>
                                             </a>
 
                                             <a href="{{ route('solicitudes.pdf', $solicitud->id) }}"
-                                            target="_blank"
-                                            class="btn btn-sm btn-outline-secondary px-2">
+                                               target="_blank"
+                                               class="btn btn-sm btn-outline-secondary px-2">
                                                 <i class="bi bi-printer"></i>
                                             </a>
 
@@ -168,7 +162,6 @@
                                                     data-accion="rechazado">
                                                 <i class="bi bi-x-circle"></i> Rechazar
                                             </button>
-
                                         </div>
                                     </td>
                                 </tr>
@@ -180,7 +173,6 @@
         </div>
     </div>
 
-    {{-- Modal de resolución --}}
     <div class="modal fade" id="modalResolucion" tabindex="-1" aria-labelledby="modalResolucionLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form id="formResolucion" method="POST" class="modal-content shadow-lg border-0 rounded-4">
@@ -215,10 +207,8 @@
             </form>
         </div>
     </div>
-
 </div>
 
-{{-- Script modal --}}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('modalResolucion');

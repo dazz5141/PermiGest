@@ -11,8 +11,8 @@
         $usuario = Auth::user();
         $totalSolicitudes = Solicitud::count();
         $pendientes = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'Pendiente'))->count();
-        $aprobadas = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'Aprobada'))->count();
-        $rechazadas = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'Rechazada'))->count();
+        $aprobadas = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'Aprobado'))->count();
+        $rechazadas = Solicitud::whereHas('estado', fn($q) => $q->where('nombre', 'Rechazado'))->count();
         $solicitudes = Solicitud::with(['usuario', 'tipo', 'estado'])->latest()->get();
     @endphp
 
@@ -141,8 +141,8 @@
                                     <td>{{ $solicitud->dias_solicitados }}</td>
                                     <td>
                                         <span class="badge 
-                                            @if($solicitud->estado->nombre === 'Aprobada') bg-success
-                                            @elseif($solicitud->estado->nombre === 'Rechazada') bg-danger
+                                            @if($solicitud->estado->nombre === 'Aprobado') bg-success
+                                            @elseif($solicitud->estado->nombre === 'Rechazado') bg-danger
                                             @elseif($solicitud->estado->nombre === 'Pendiente') bg-secondary
                                             @else bg-warning text-dark @endif">
                                             {{ $solicitud->estado->nombre }}
