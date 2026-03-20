@@ -13,10 +13,12 @@ class ResumenPermisosController extends Controller
     private const TIPO_SIN_GOCE = 2;
     private const TIPO_DEFUNCION = 3;
     private const TIPO_VARIOS = 4;
+    private const TOTAL_DIAS_ANUALES_CON_GOCE = 6.0;
 
     public function index()
     {
-        $userId = (int) Auth::user()->id;
+        $usuario = Auth::user();
+        $userId = (int) $usuario->id;
         $periodoIdSeleccionado = request('periodo_id');
 
         $periodoActivo = $periodoIdSeleccionado
@@ -43,10 +45,12 @@ class ResumenPermisosController extends Controller
         $totalSinGoce = $sinGoce->sum('dias_solicitados');
         $totalDefuncion = $defuncion->sum('dias_solicitados');
         $totalVarios = $varios->sum('dias_solicitados');
+        $saldoConGoceDisponible = max(self::TOTAL_DIAS_ANUALES_CON_GOCE - $totalConGoce, 0);
 
         $periodos = PeriodoAdministrativo::orderBy('anio', 'desc')->get();
 
         return view('permisos.resumen', [
+            'usuario' => $usuario,
             'conGoce' => $conGoce,
             'sinGoce' => $sinGoce,
             'defuncion' => $defuncion,
@@ -56,6 +60,8 @@ class ResumenPermisosController extends Controller
             'totalDefuncion' => $totalDefuncion,
             'totalVarios' => $totalVarios,
             'totalAusentismo' => $totalConGoce + $totalSinGoce + $totalDefuncion + $totalVarios,
+            'saldoConGoceDisponible' => $saldoConGoceDisponible,
+            'totalDiasAnualesConGoce' => self::TOTAL_DIAS_ANUALES_CON_GOCE,
             'periodoActivo' => $periodoActivo,
             'periodos' => $periodos,
         ]);

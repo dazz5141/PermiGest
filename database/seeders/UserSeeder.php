@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Rol;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -10,6 +11,11 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        $roles = Rol::query()
+            ->whereIn('nombre', ['admin', 'encargado_sistema', 'secretaria', 'jefe_directo', 'funcionario'])
+            ->get()
+            ->keyBy('nombre');
+
         $admin = User::firstOrCreate(
             ['run' => '11.111.111-1'],
             [
@@ -20,8 +26,23 @@ class UserSeeder extends Seeder
                 'departamento' => 'Direccion',
                 'password' => Hash::make('admin123'),
                 'activo' => 1,
-                'rol_id' => 1,
+                'rol_id' => $roles['admin']->id,
                 'jefe_directo_id' => null,
+            ]
+        );
+
+        User::firstOrCreate(
+            ['run' => '12.345.678-5'],
+            [
+                'nombres' => 'Erika',
+                'apellidos' => 'Soporte',
+                'correo_institucional' => 'encargado@colegio.cl',
+                'cargo' => 'Encargada del Sistema',
+                'departamento' => 'Informatica',
+                'password' => Hash::make('encargado123'),
+                'activo' => 1,
+                'rol_id' => $roles['encargado_sistema']->id,
+                'jefe_directo_id' => $admin->id,
             ]
         );
 
@@ -35,7 +56,7 @@ class UserSeeder extends Seeder
                 'departamento' => 'Administracion',
                 'password' => Hash::make('secretaria123'),
                 'activo' => 1,
-                'rol_id' => 2,
+                'rol_id' => $roles['secretaria']->id,
                 'jefe_directo_id' => $admin->id,
             ]
         );
@@ -50,7 +71,7 @@ class UserSeeder extends Seeder
                 'departamento' => 'Direccion',
                 'password' => Hash::make('jefe123'),
                 'activo' => 1,
-                'rol_id' => 3,
+                'rol_id' => $roles['jefe_directo']->id,
                 'jefe_directo_id' => $admin->id,
             ]
         );
@@ -65,7 +86,7 @@ class UserSeeder extends Seeder
                 'departamento' => 'Matematica',
                 'password' => Hash::make('docente123'),
                 'activo' => 1,
-                'rol_id' => 4,
+                'rol_id' => $roles['funcionario']->id,
                 'jefe_directo_id' => $director->id,
             ]
         );

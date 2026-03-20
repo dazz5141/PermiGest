@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Feriado;
+use App\Models\RestauracionPermiso;
 use App\Models\Solicitud;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +20,6 @@ class DashboardController extends Controller
 
         switch ($usuario->rol?->nombre ?? '') {
             case 'admin':
-            case 'encargado_sistema':
                 $totalUsuarios = User::count();
                 $totalSolicitudes = Solicitud::count();
                 $aprobadas = Solicitud::whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_APROBADO))->count();
@@ -32,6 +33,33 @@ class DashboardController extends Controller
                     'aprobadas',
                     'rechazadas',
                     'pendientes'
+                ));
+
+            case 'encargado_sistema':
+                $totalUsuarios = User::count();
+                $totalSolicitudes = Solicitud::count();
+                $aprobadas = Solicitud::whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_APROBADO))->count();
+                $rechazadas = Solicitud::whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_RECHAZADO))->count();
+                $pendientes = Solicitud::whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_PENDIENTE))->count();
+                $usuariosActivos = User::where('activo', true)->count();
+                $feriadosRegistrados = Feriado::count();
+                $restauracionesRegistradas = RestauracionPermiso::count();
+                $restauracionesRecientes = RestauracionPermiso::with(['solicitud.usuario', 'usuario'])
+                    ->latest()
+                    ->take(6)
+                    ->get();
+
+                return view('dashboard.encargado_sistema', compact(
+                    'usuario',
+                    'totalUsuarios',
+                    'totalSolicitudes',
+                    'aprobadas',
+                    'rechazadas',
+                    'pendientes',
+                    'usuariosActivos',
+                    'feriadosRegistrados',
+                    'restauracionesRegistradas',
+                    'restauracionesRecientes'
                 ));
 
             case 'secretaria':

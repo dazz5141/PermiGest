@@ -1,5 +1,6 @@
 @php
-    $rolActual = Auth::user()?->rol?->nombre ?? 'funcionario';
+    $usuario = Auth::user();
+    $rolActual = $usuario?->rol?->nombre ?? 'funcionario';
     $rolMostrado = match($rolActual) {
         'jefe_directo' => 'Director',
         'encargado_sistema' => 'Encargado del sistema',
@@ -10,60 +11,67 @@
     };
 @endphp
 
-<aside class="sidebar bg-white border-end" id="sidebar">
-    <div class="sidebar-header p-4 border-bottom">
-        <div class="user-info text-center">
-            <div class="user-avatar mb-3">
-                <i class="bi bi-person-circle text-primary" style="font-size: 3.5rem;"></i>
+<aside class="sidebar border-end" id="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-profile-card">
+            <div class="sidebar-profile-glow"></div>
+            <div class="user-avatar">
+                <i class="bi bi-person-circle"></i>
             </div>
             <h6 class="user-name mb-1 fw-semibold">
-                {{ Auth::user()->nombres ?? 'Usuario' }} {{ Auth::user()->apellidos ?? '' }}
+                {{ $usuario->nombres ?? 'Usuario' }} {{ $usuario->apellidos ?? '' }}
             </h6>
-            <p class="user-role text-muted small mb-0">{{ $rolMostrado }}</p>
+            <p class="user-role mb-0">{{ $rolMostrado }}</p>
         </div>
     </div>
 
     <nav class="sidebar-menu p-3">
-        <ul class="nav flex-column">
+        <ul class="nav flex-column gap-2">
             @if($rolActual === 'funcionario')
-                <li class="nav-item mb-2">
-                    <a class="nav-link d-flex align-items-center" href="{{ route('solicitudes.index') }}">
-                        <i class="bi bi-search me-2"></i>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link {{ request()->routeIs('solicitudes.index') ? 'active' : '' }}" href="{{ route('solicitudes.index') }}">
+                        <span class="nav-icon-wrap"><i class="bi bi-search"></i></span>
                         <span>Mis solicitudes</span>
                     </a>
                 </li>
 
-                <li class="nav-item mb-2">
-                    <a class="nav-link d-flex align-items-center collapsed" data-bs-toggle="collapse"
-                       href="#solicitudesMenu" role="button" aria-expanded="false" aria-controls="solicitudesMenu">
-                        <i class="bi bi-file-earmark-text me-2"></i>
+                <li class="nav-section-label">Solicitudes</li>
+
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link d-flex align-items-center collapsed {{ request()->routeIs('solicitudes.create') ? 'active' : '' }}"
+                       data-bs-toggle="collapse"
+                       href="#solicitudesMenu"
+                       role="button"
+                       aria-expanded="{{ request()->routeIs('solicitudes.create') ? 'true' : 'false' }}"
+                       aria-controls="solicitudesMenu">
+                        <span class="nav-icon-wrap"><i class="bi bi-file-earmark-text"></i></span>
                         <span>Solicitudes</span>
                         <i class="bi bi-chevron-down ms-auto"></i>
                     </a>
 
-                    <div class="collapse" id="solicitudesMenu">
-                        <ul class="nav flex-column ms-3 mt-2">
-                            <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('solicitudes.create', ['tipo' => 'con_goce']) }}">
-                                    <i class="bi bi-circle-fill me-2 text-primary" style="font-size: 0.4rem;"></i>
+                    <div class="collapse {{ request()->routeIs('solicitudes.create') ? 'show' : '' }}" id="solicitudesMenu">
+                        <ul class="nav flex-column submenu-panel mt-2">
+                            <li class="nav-item">
+                                <a class="nav-link submenu-link {{ request()->fullUrlIs('*tipo=con_goce*') ? 'active' : '' }}" href="{{ route('solicitudes.create', ['tipo' => 'con_goce']) }}">
+                                    <span class="submenu-dot"></span>
                                     <span>Permiso con goce de sueldo</span>
                                 </a>
                             </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('solicitudes.create', ['tipo' => 'sin_goce']) }}">
-                                    <i class="bi bi-circle-fill me-2 text-primary" style="font-size: 0.4rem;"></i>
+                            <li class="nav-item">
+                                <a class="nav-link submenu-link {{ request()->fullUrlIs('*tipo=sin_goce*') ? 'active' : '' }}" href="{{ route('solicitudes.create', ['tipo' => 'sin_goce']) }}">
+                                    <span class="submenu-dot"></span>
                                     <span>Permiso sin goce de sueldo</span>
                                 </a>
                             </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('solicitudes.create', ['tipo' => 'defuncion']) }}">
-                                    <i class="bi bi-circle-fill me-2 text-primary" style="font-size: 0.4rem;"></i>
+                            <li class="nav-item">
+                                <a class="nav-link submenu-link {{ request()->fullUrlIs('*tipo=defuncion*') ? 'active' : '' }}" href="{{ route('solicitudes.create', ['tipo' => 'defuncion']) }}">
+                                    <span class="submenu-dot"></span>
                                     <span>Permiso por defuncion</span>
                                 </a>
                             </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('solicitudes.create', ['tipo' => 'varios']) }}">
-                                    <i class="bi bi-circle-fill me-2 text-primary" style="font-size: 0.4rem;"></i>
+                            <li class="nav-item">
+                                <a class="nav-link submenu-link {{ request()->fullUrlIs('*tipo=varios*') ? 'active' : '' }}" href="{{ route('solicitudes.create', ['tipo' => 'varios']) }}">
+                                    <span class="submenu-dot"></span>
                                     <span>Permisos varios</span>
                                 </a>
                             </li>
@@ -71,126 +79,145 @@
                     </div>
                 </li>
             @elseif($rolActual === 'secretaria')
-                <li class="nav-item mb-2">
-                    <a class="nav-link d-flex align-items-center" href="{{ route('reportes.mensuales') }}">
-                        <i class="bi bi-bar-chart-line me-2 text-success"></i>
+                <li class="nav-section-label">Gestion</li>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link {{ request()->routeIs('reportes.mensuales') ? 'active' : '' }}" href="{{ route('reportes.mensuales') }}">
+                        <span class="nav-icon-wrap"><i class="bi bi-bar-chart-line"></i></span>
                         <div>
-                            <span>Solicitudes del establecimiento</span><br>
-                            <span>Reportes y estadisticas</span>
+                            <span class="d-block">Solicitudes del establecimiento</span>
+                            <small class="text-muted">Reportes y estadisticas</small>
                         </div>
                     </a>
                 </li>
             @elseif($rolActual === 'jefe_directo')
-                <li class="nav-item mb-2">
-                    <a class="nav-link d-flex align-items-center" href="{{ route('resoluciones.index') }}">
-                        <i class="bi bi-bar-chart-line me-2 text-success"></i>
+                <li class="nav-section-label">Direccion</li>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link {{ request()->routeIs('resoluciones.index') ? 'active' : '' }}" href="{{ route('resoluciones.index') }}">
+                        <span class="nav-icon-wrap"><i class="bi bi-journal-check"></i></span>
                         <div>
-                            <span>Solicitudes pendientes</span><br>
-                            <span>Resolucion de Direccion</span>
+                            <span class="d-block">Solicitudes pendientes</span>
+                            <small class="text-muted">Resolucion de Direccion</small>
                         </div>
                     </a>
                 </li>
             @elseif($rolActual === 'encargado_sistema')
-                <li class="nav-item mb-2">
-                    <a class="nav-link d-flex align-items-center" href="{{ route('dashboard') }}">
-                        <i class="bi bi-speedometer2 me-2 text-primary"></i>
+                <li class="nav-section-label">Operacion</li>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                        <span class="nav-icon-wrap"><i class="bi bi-speedometer2"></i></span>
                         <span>Panel operativo</span>
                     </a>
                 </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link d-flex align-items-center" href="{{ route('admin.usuarios.index') }}">
-                        <i class="bi bi-people-fill me-2 text-secondary"></i>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}" href="{{ route('admin.usuarios.index') }}">
+                        <span class="nav-icon-wrap"><i class="bi bi-people-fill"></i></span>
                         <span>Usuarios</span>
                     </a>
                 </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link d-flex align-items-center" href="{{ route('admin.feriados.index') }}">
-                        <i class="bi bi-calendar-event me-2 text-secondary"></i>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link {{ request()->routeIs('admin.feriados.*') ? 'active' : '' }}" href="{{ route('admin.feriados.index') }}">
+                        <span class="nav-icon-wrap"><i class="bi bi-calendar-event"></i></span>
                         <span>Feriados</span>
                     </a>
                 </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link d-flex align-items-center" href="{{ route('admin.restauraciones.index') }}">
-                        <i class="bi bi-arrow-counterclockwise me-2 text-secondary"></i>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link {{ request()->routeIs('admin.restauraciones.*') ? 'active' : '' }}" href="{{ route('admin.restauraciones.index') }}">
+                        <span class="nav-icon-wrap"><i class="bi bi-arrow-counterclockwise"></i></span>
                         <span>Restauraciones</span>
                     </a>
                 </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link d-flex align-items-center" href="{{ route('auditoria.index') }}">
-                        <i class="bi bi-search me-2 text-secondary"></i>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link {{ request()->routeIs('auditoria.*') ? 'active' : '' }}" href="{{ route('auditoria.index') }}">
+                        <span class="nav-icon-wrap"><i class="bi bi-search"></i></span>
                         <span>Auditoria</span>
                     </a>
                 </li>
             @elseif($rolActual === 'admin')
-                <li class="nav-item mb-2">
-                    <a class="nav-link d-flex align-items-center" href="{{ url()->current() }}">
-                        <i class="bi bi-graph-up-arrow me-2 text-info"></i>
+                <li class="nav-section-label">Vision general</li>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                        <span class="nav-icon-wrap"><i class="bi bi-graph-up-arrow"></i></span>
                         <span>Reportes generales</span>
                     </a>
                 </li>
 
-                <li class="nav-item mb-2">
-                    <a class="nav-link d-flex align-items-center collapsed" data-bs-toggle="collapse"
-                       href="#adminMenu" role="button" aria-expanded="false" aria-controls="adminMenu">
-                        <i class="bi bi-gear-fill me-2"></i>
+                <li class="nav-section-label">Administracion</li>
+                <li class="nav-item">
+                    @php
+                        $adminAbierto = request()->routeIs('tipos.*')
+                            || request()->routeIs('estados.*')
+                            || request()->routeIs('parentescos.*')
+                            || request()->routeIs('tiposvarios.*')
+                            || request()->routeIs('admin.feriados.*')
+                            || request()->routeIs('admin.restauraciones.*')
+                            || request()->routeIs('admin.usuarios.*')
+                            || request()->routeIs('admin.roles.*')
+                            || request()->routeIs('auditoria.*');
+                    @endphp
+                    <a class="nav-link sidebar-link d-flex align-items-center collapsed {{ $adminAbierto ? 'active' : '' }}"
+                       data-bs-toggle="collapse"
+                       href="#adminMenu"
+                       role="button"
+                       aria-expanded="{{ $adminAbierto ? 'true' : 'false' }}"
+                       aria-controls="adminMenu">
+                        <span class="nav-icon-wrap"><i class="bi bi-gear-fill"></i></span>
                         <span>Administracion</span>
                         <i class="bi bi-chevron-down ms-auto"></i>
                     </a>
 
-                    <div class="collapse" id="adminMenu">
-                        <ul class="nav flex-column ms-3 mt-2">
-                            <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('tipos.index') }}">
-                                    <i class="bi bi-folder2-open me-2 text-secondary" style="font-size: 1rem;"></i>
+                    <div class="collapse {{ $adminAbierto ? 'show' : '' }}" id="adminMenu">
+                        <ul class="nav flex-column submenu-panel mt-2">
+                            <li class="nav-item">
+                                <a class="nav-link submenu-link {{ request()->routeIs('tipos.*') ? 'active' : '' }}" href="{{ route('tipos.index') }}">
+                                    <span class="submenu-dot"></span>
                                     <span>Tipos de solicitud</span>
                                 </a>
                             </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('estados.index') }}">
-                                    <i class="bi bi-flag me-2 text-secondary" style="font-size: 1rem;"></i>
+                            <li class="nav-item">
+                                <a class="nav-link submenu-link {{ request()->routeIs('estados.*') ? 'active' : '' }}" href="{{ route('estados.index') }}">
+                                    <span class="submenu-dot"></span>
                                     <span>Estados de solicitud</span>
                                 </a>
                             </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('parentescos.index') }}">
-                                    <i class="bi bi-people me-2 text-secondary" style="font-size: 1rem;"></i>
+                            <li class="nav-item">
+                                <a class="nav-link submenu-link {{ request()->routeIs('parentescos.*') ? 'active' : '' }}" href="{{ route('parentescos.index') }}">
+                                    <span class="submenu-dot"></span>
                                     <span>Parentescos</span>
                                 </a>
                             </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('tiposvarios.index') }}">
-                                    <i class="bi bi-sliders me-2 text-secondary" style="font-size: 1rem;"></i>
+                            <li class="nav-item">
+                                <a class="nav-link submenu-link {{ request()->routeIs('tiposvarios.*') ? 'active' : '' }}" href="{{ route('tiposvarios.index') }}">
+                                    <span class="submenu-dot"></span>
                                     <span>Tipos varios</span>
                                 </a>
                             </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('admin.feriados.index') }}">
-                                    <i class="bi bi-calendar-event me-2 text-secondary" style="font-size: 1rem;"></i>
+                            <li class="nav-item">
+                                <a class="nav-link submenu-link {{ request()->routeIs('admin.feriados.*') ? 'active' : '' }}" href="{{ route('admin.feriados.index') }}">
+                                    <span class="submenu-dot"></span>
                                     <span>Feriados</span>
                                 </a>
                             </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('admin.restauraciones.index') }}">
-                                    <i class="bi bi-arrow-counterclockwise me-2 text-secondary" style="font-size: 1rem;"></i>
+                            <li class="nav-item">
+                                <a class="nav-link submenu-link {{ request()->routeIs('admin.restauraciones.*') ? 'active' : '' }}" href="{{ route('admin.restauraciones.index') }}">
+                                    <span class="submenu-dot"></span>
                                     <span>Restauraciones</span>
                                 </a>
                             </li>
-                            <li><hr class="my-2"></li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('admin.usuarios.index') }}">
-                                    <i class="bi bi-people-fill me-2 text-secondary" style="font-size: 1rem;"></i>
+                            <li class="nav-item">
+                                <a class="nav-link submenu-link {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}" href="{{ route('admin.usuarios.index') }}">
+                                    <span class="submenu-dot"></span>
                                     <span>Usuarios</span>
                                 </a>
                             </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('admin.roles.index') }}">
-                                    <i class="bi bi-shield-lock-fill me-2 text-secondary" style="font-size: 1rem;"></i>
+                            <li class="nav-item">
+                                <a class="nav-link submenu-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}" href="{{ route('admin.roles.index') }}">
+                                    <span class="submenu-dot"></span>
                                     <span>Roles</span>
                                 </a>
                             </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link submenu-link d-flex align-items-center" href="{{ route('auditoria.index') }}">
-                                    <i class="bi bi-search me-2 text-secondary" style="font-size: 1rem;"></i>
+                            <li class="nav-item">
+                                <a class="nav-link submenu-link {{ request()->routeIs('auditoria.*') ? 'active' : '' }}" href="{{ route('auditoria.index') }}">
+                                    <span class="submenu-dot"></span>
                                     <span>Auditoria del sistema</span>
                                 </a>
                             </li>
