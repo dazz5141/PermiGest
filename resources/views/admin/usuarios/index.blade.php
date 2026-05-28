@@ -17,7 +17,8 @@
 
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body">
-            <table class="table table-hover align-middle">
+            <div class="table-responsive usuarios-table-wrap">
+                <table class="table table-hover align-middle usuarios-table">
                 <thead class="table-light">
                     <tr>
                         <th>Nombre</th>
@@ -57,13 +58,13 @@
                                     <span class="badge bg-secondary">Inactivo</span>
                                 @endif
                             </td>
-                            <td class="text-center">
+                            <td class="text-center usuarios-actions-cell">
                                 @if($puedeGestionar)
-                                    <a href="{{ route('admin.usuarios.edit', $u->id) }}" class="btn btn-sm btn-warning me-1">
+                                    <a href="{{ route('admin.usuarios.edit', $u->id) }}" class="btn btn-sm btn-warning">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
 
-                                    <form action="{{ route('admin.usuarios.toggle', $u->id) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('admin.usuarios.toggle', $u->id) }}" method="POST" class="d-inline-flex">
                                         @csrf
                                         <button type="submit"
                                                 class="btn btn-sm {{ $u->activo ? 'btn-danger' : 'btn-success' }}"
@@ -98,6 +99,7 @@
     </div>
 </div>
 
+</div>
 <div class="modal fade" id="crearUsuarioModal" tabindex="-1" aria-labelledby="crearUsuarioLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <form id="formCrearUsuario" class="modal-content" method="POST" action="{{ route('admin.usuarios.store') }}">

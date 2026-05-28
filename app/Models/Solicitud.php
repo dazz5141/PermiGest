@@ -105,4 +105,17 @@ class Solicitud extends Model
     {
         return max((float) $this->dias_solicitados - $this->dias_restaurados, 0);
     }
+
+    public function getDiasRegistradosAttribute(): float
+    {
+        if ($this->dias_solicitados !== null) {
+            return (float) $this->dias_solicitados;
+        }
+
+        if ($this->fecha_desde && $this->fecha_hasta) {
+            return (float) $this->fecha_desde->diffInDays($this->fecha_hasta) + 1;
+        }
+
+        return 0.0;
+    }
 }

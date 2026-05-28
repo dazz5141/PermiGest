@@ -152,6 +152,10 @@ class SolicitudController extends Controller
         $esMedioDia = in_array($jornada, ['manana', 'tarde'], true) || $diasSolicitados === 0.5;
         $diasHabilesRango = $this->contarDiasHabiles($desde, $hasta);
 
+        if ($tipoSolicitudId === self::TIPO_VARIOS) {
+            $diasSolicitados = (float) $diasHabilesRango;
+        }
+
         if ($esMedioDia) {
             if ($tipoSolicitudId !== self::TIPO_CON_GOCE) {
                 return back()->withErrors([

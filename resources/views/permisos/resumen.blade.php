@@ -77,7 +77,7 @@
                 </div>
                 <div class="col-md-3">
                     <div class="summary-employee-field">
-                        <small>Dirección</small>
+                        <small>Departamento</small>
                         <strong>{{ $usuario->departamento ?? 'No informado' }}</strong>
                     </div>
                 </div>
@@ -147,7 +147,7 @@
                             <tr>
                                 <td>{{ $p->fecha_desde->format('d/m/Y') }}</td>
                                 <td>{{ $p->fecha_hasta->format('d/m/Y') }}</td>
-                                <td>{{ number_format($p->dias_solicitados, 1) }}</td>
+                                <td>{{ number_format($p->dias_registrados, 1) }}</td>
                                 <td>{{ number_format($p->dias_restaurados, 1) }}</td>
                                 <td>
                                     <span class="fw-semibold text-primary">{{ number_format($p->dias_netos_descontados, 1) }}</span>
@@ -189,7 +189,7 @@
                             <tr>
                                 <td>{{ $p->fecha_desde->format('d/m/Y') }}</td>
                                 <td>{{ $p->fecha_hasta->format('d/m/Y') }}</td>
-                                <td>{{ number_format($p->dias_solicitados, 1) }}</td>
+                                <td>{{ number_format($p->dias_registrados, 1) }}</td>
                                 <td>{{ $p->motivo ?? '-' }}</td>
                             </tr>
                         @empty
@@ -229,7 +229,7 @@
                                     <tr>
                                         <td>{{ $p->fecha_desde->format('d/m/Y') }}</td>
                                         <td>{{ $p->fecha_hasta->format('d/m/Y') }}</td>
-                                        <td>{{ number_format($p->dias_solicitados, 1) }}</td>
+                                        <td>{{ number_format($p->dias_registrados, 1) }}</td>
                                         <td>{{ $p->parentesco?->nombre ?? '-' }}</td>
                                     </tr>
                                 @empty
@@ -269,7 +269,7 @@
                                     <tr>
                                         <td>{{ $p->fecha_desde->format('d/m/Y') }}</td>
                                         <td>{{ $p->fecha_hasta->format('d/m/Y') }}</td>
-                                        <td>{{ number_format($p->dias_solicitados, 1) }}</td>
+                                        <td>{{ number_format($p->dias_registrados, 1) }}</td>
                                         <td>{{ $p->observaciones ?? $p->motivo ?? '-' }}</td>
                                     </tr>
                                 @empty
@@ -298,7 +298,6 @@
     </div>
 </div>
 @endsection
-
 @section('styles')
 <style>
 .summary-icon-wrap {

@@ -42,9 +42,9 @@ class ResumenPermisosController extends Controller
         $varios = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === self::TIPO_VARIOS);
 
         $totalConGoce = $conGoce->sum(fn ($solicitud) => $solicitud->dias_netos_descontados);
-        $totalSinGoce = $sinGoce->sum('dias_solicitados');
-        $totalDefuncion = $defuncion->sum('dias_solicitados');
-        $totalVarios = $varios->sum('dias_solicitados');
+        $totalSinGoce = $sinGoce->sum(fn ($solicitud) => $solicitud->dias_registrados);
+        $totalDefuncion = $defuncion->sum(fn ($solicitud) => $solicitud->dias_registrados);
+        $totalVarios = $varios->sum(fn ($solicitud) => $solicitud->dias_registrados);
         $saldoConGoceDisponible = max(self::TOTAL_DIAS_ANUALES_CON_GOCE - $totalConGoce, 0);
 
         $periodos = PeriodoAdministrativo::orderBy('anio', 'desc')->get();

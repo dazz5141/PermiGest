@@ -55,7 +55,7 @@ class UsuarioController extends Controller
 
         $nuevo = User::create($validated);
 
-        AuditoriaHelper::registrar('users', $nuevo->id, 'usuario_creado', Auth::id(), null, $nuevo->toArray());
+        AuditoriaHelper::registrar('users', $nuevo->id, 'usuario_creado', Auth::user()->id, null, $nuevo->toArray());
 
         return redirect()->route('admin.usuarios.index')->with('success', 'Usuario creado correctamente.');
     }
@@ -109,7 +109,7 @@ class UsuarioController extends Controller
 
         $usuario->update($validated);
 
-        AuditoriaHelper::registrar('users', $usuario->id, 'usuario_actualizado', Auth::id(), $oldData, $usuario->toArray());
+        AuditoriaHelper::registrar('users', $usuario->id, 'usuario_actualizado', Auth::user()->id, $oldData, $usuario->toArray());
 
         return redirect()->route('admin.usuarios.index')->with('success', 'Usuario actualizado correctamente.');
     }
@@ -130,7 +130,7 @@ class UsuarioController extends Controller
             'users',
             $usuario->id,
             $usuario->activo ? 'usuario_activado' : 'usuario_desactivado',
-            Auth::id(),
+            Auth::user()->id,
             $oldData,
             $usuario->toArray()
         );
@@ -156,7 +156,7 @@ class UsuarioController extends Controller
         $usuario->password = Hash::make($request->password);
         $usuario->save();
 
-        AuditoriaHelper::registrar('users', $usuario->id, 'usuario_password_restablecida', Auth::id(), $oldData, ['password' => 'encrypted']);
+        AuditoriaHelper::registrar('users', $usuario->id, 'usuario_password_restablecida', Auth::user()->id, $oldData, ['password' => 'encrypted']);
 
         return redirect()->route('admin.usuarios.index')->with('success', 'Contrasena restablecida correctamente.');
     }
