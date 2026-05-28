@@ -6,10 +6,10 @@
 @php
     $subordinadosIds = $usuario->subordinados()->pluck('id');
     $aprobadasDireccion = \App\Models\Solicitud::whereIn('user_id', $subordinadosIds)
-        ->whereHas('estado', fn($q) => $q->where('nombre', 'Aprobado'))
+        ->whereHas('estado', fn($q) => $q->where('codigo', \App\Models\EstadoSolicitud::CODIGO_APROBADO))
         ->count();
     $rechazadasDireccion = \App\Models\Solicitud::whereIn('user_id', $subordinadosIds)
-        ->whereHas('estado', fn($q) => $q->where('nombre', 'Rechazado'))
+        ->whereHas('estado', fn($q) => $q->where('codigo', \App\Models\EstadoSolicitud::CODIGO_RECHAZADO))
         ->count();
 @endphp
 

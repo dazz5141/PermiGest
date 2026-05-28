@@ -152,6 +152,7 @@
                                         class="form-control @error('fecha_desde') is-invalid @enderror"
                                         id="fecha_desde"
                                         name="fecha_desde"
+                                        min="{{ now()->toDateString() }}"
                                         value="{{ old('fecha_desde') }}"
                                         required>
                                     @error('fecha_desde')
@@ -165,6 +166,7 @@
                                         class="form-control @error('fecha_hasta') is-invalid @enderror"
                                         id="fecha_hasta"
                                         name="fecha_hasta"
+                                        min="{{ now()->toDateString() }}"
                                         value="{{ old('fecha_hasta') }}"
                                         required>
                                     @error('fecha_hasta')

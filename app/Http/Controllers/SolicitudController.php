@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\AuditoriaHelper;
+use App\Models\EstadoSolicitud;
 use App\Models\Feriado;
 use App\Models\Parentesco;
 use App\Models\PeriodoAdministrativo;
@@ -22,8 +23,8 @@ class SolicitudController extends Controller
     private const TIPO_SIN_GOCE = 2;
     private const TIPO_DEFUNCION = 3;
     private const TIPO_VARIOS = 4;
-    private const ESTADO_PENDIENTE = 1;
-    private const ESTADO_APROBADO = 3;
+    private const ESTADO_PENDIENTE = EstadoSolicitud::CODIGO_PENDIENTE;
+    private const ESTADO_APROBADO = EstadoSolicitud::CODIGO_APROBADO;
     private const TOTAL_DIAS_CON_GOCE = 6.0;
 
     /**
@@ -102,7 +103,7 @@ class SolicitudController extends Controller
 
         $rules = [
             'tipo_solicitud_id' => 'required|exists:tipos_solicitud,id',
-            'fecha_desde' => 'required|date',
+            'fecha_desde' => 'required|date|after_or_equal:today',
             'fecha_hasta' => 'required|date|after_or_equal:fecha_desde',
             'hora_desde' => 'nullable|date_format:H:i',
             'hora_hasta' => 'nullable|date_format:H:i|after:hora_desde',
@@ -127,7 +128,10 @@ class SolicitudController extends Controller
             $rules['motivo'] = 'required|string|max:1000';
         }
 
-        $request->validate($rules);
+        $request->validate($rules, [
+            'fecha_desde.after_or_equal' => 'No se pueden solicitar permisos para fechas pasadas.',
+            'fecha_hasta.after_or_equal' => 'La fecha de termino debe ser igual o posterior a la fecha de inicio.',
+        ]);
 
         if (!Hash::check($request->password, $usuario->password)) {
             return back()->withErrors([
@@ -216,12 +220,20 @@ class SolicitudController extends Controller
             ])->withInput();
         }
 
+        $estadoPendienteId = EstadoSolicitud::where('codigo', self::ESTADO_PENDIENTE)->value('id');
+
+        if (!$estadoPendienteId) {
+            return back()->withErrors([
+                'estado_solicitud_id' => 'No existe el estado base pendiente configurado.'
+            ])->withInput();
+        }
+
         $solicitud = Solicitud::create([
             'user_id' => $usuario->id,
             'periodo_id' => $periodoActivo->id,
             'validador_id' => $jefe->id,
             'tipo_solicitud_id' => $tipoSolicitudId,
-            'estado_solicitud_id' => self::ESTADO_PENDIENTE,
+            'estado_solicitud_id' => $estadoPendienteId,
             'parentesco_id' => $request->parentesco_id,
             'motivo' => $request->motivo,
             'fecha_desde' => $desde->toDateString(),
@@ -292,7 +304,7 @@ class SolicitudController extends Controller
         $diasTomados = Solicitud::withSum('restauraciones', 'dias_restaurados')
             ->where('user_id', $userId)
             ->where('tipo_solicitud_id', self::TIPO_CON_GOCE)
-            ->where('estado_solicitud_id', self::ESTADO_APROBADO)
+            ->whereHas('estado', fn ($q) => $q->where('codigo', self::ESTADO_APROBADO))
             ->where('periodo_id', $periodoId)
             ->get()
             ->sum(function ($solicitud) {

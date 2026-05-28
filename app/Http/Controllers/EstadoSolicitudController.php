@@ -6,6 +6,7 @@ use App\Models\EstadoSolicitud;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\AuditoriaHelper;
+use Illuminate\Support\Str;
 
 class EstadoSolicitudController extends Controller
 {
@@ -24,6 +25,11 @@ class EstadoSolicitudController extends Controller
     public function edit($id)
     {
         $estado = EstadoSolicitud::findOrFail($id);
+
+        if ($estado->protegido) {
+            abort(403, 'Este estado base no se puede editar.');
+        }
+
         return view('admin.estados_solicitud.edit', compact('estado'));
     }
 
@@ -36,7 +42,11 @@ class EstadoSolicitudController extends Controller
             'nombre' => 'required|string|max:50',
         ]);
 
-        $nuevo = EstadoSolicitud::create($request->only('nombre'));
+        $nuevo = EstadoSolicitud::create([
+            'nombre' => $request->nombre,
+            'codigo' => $this->generarCodigo($request->nombre),
+            'protegido' => false,
+        ]);
 
         /**
          * AUDITORÍA — creación
@@ -59,6 +69,10 @@ class EstadoSolicitudController extends Controller
     public function update(Request $request, $id)
     {
         $estado = EstadoSolicitud::findOrFail($id);
+
+        if ($estado->protegido) {
+            abort(403, 'Este estado base no se puede editar.');
+        }
 
         $request->validate([
             'nombre' => 'required|string|max:50',
@@ -92,6 +106,10 @@ class EstadoSolicitudController extends Controller
     {
         $estado = EstadoSolicitud::findOrFail($id);
 
+        if ($estado->protegido) {
+            abort(403, 'Este estado base no se puede eliminar.');
+        }
+
         // datos antes de eliminar
         $oldData = $estado->toArray();
 
@@ -111,5 +129,19 @@ class EstadoSolicitudController extends Controller
         );
 
         return back()->with('success', 'Estado eliminado correctamente.');
+    }
+
+    private function generarCodigo(string $nombre): string
+    {
+        $codigoBase = Str::slug($nombre, '_') ?: 'estado';
+        $codigo = $codigoBase;
+        $contador = 2;
+
+        while (EstadoSolicitud::where('codigo', $codigo)->exists()) {
+            $codigo = $codigoBase . '_' . $contador;
+            $contador++;
+        }
+
+        return $codigo;
     }
 }

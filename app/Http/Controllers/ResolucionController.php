@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Auth;
 
 class ResolucionController extends Controller
 {
-    private const ESTADO_PENDIENTE = 'Pendiente';
-    private const ESTADO_APROBADO = 'Aprobado';
-    private const ESTADO_RECHAZADO = 'Rechazado';
+    private const ESTADO_PENDIENTE = EstadoSolicitud::CODIGO_PENDIENTE;
+    private const ESTADO_APROBADO = EstadoSolicitud::CODIGO_APROBADO;
+    private const ESTADO_RECHAZADO = EstadoSolicitud::CODIGO_RECHAZADO;
 
     /**
      * Listar solicitudes pendientes para resolver.
@@ -35,7 +35,7 @@ class ResolucionController extends Controller
         }
 
         $pendientes = Solicitud::whereIn('user_id', $subordinadosIds)
-            ->whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_PENDIENTE))
+            ->whereHas('estado', fn ($q) => $q->where('codigo', self::ESTADO_PENDIENTE))
             ->with(['usuario', 'tipo', 'estado'])
             ->orderByDesc('created_at')
             ->get();
@@ -66,7 +66,7 @@ class ResolucionController extends Controller
             ? self::ESTADO_APROBADO
             : self::ESTADO_RECHAZADO;
 
-        $estadoId = EstadoSolicitud::where('nombre', $estadoNombre)->value('id');
+        $estadoId = EstadoSolicitud::where('codigo', $estadoNombre)->value('id');
 
         if (!$estadoId) {
             abort(500, 'No se encontro el estado de solicitud requerido.');

@@ -21,6 +21,8 @@
                 <thead class="table-light">
                     <tr>
                         <th>Nombre</th>
+                        <th>Codigo</th>
+                        <th>Tipo</th>
                         <th class="text-end pe-4">Acciones</th>
                     </tr>
                 </thead>
@@ -28,7 +30,18 @@
                     @forelse($estados as $estado)
                         <tr>
                             <td>{{ $estado->nombre }}</td>
+                            <td><code>{{ $estado->codigo }}</code></td>
+                            <td>
+                                @if($estado->protegido)
+                                    <span class="badge bg-primary">Base del sistema</span>
+                                @else
+                                    <span class="badge bg-secondary">Personalizado</span>
+                                @endif
+                            </td>
                             <td class="text-end pe-4">
+                                @if($estado->protegido)
+                                    <span class="text-muted small">Protegido</span>
+                                @else
                                 <a href="{{ route('estados.edit', $estado->id) }}" class="btn btn-sm btn-warning me-1">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
@@ -46,10 +59,11 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="2" class="text-center text-muted">No hay estados registrados</td></tr>
+                        <tr><td colspan="4" class="text-center text-muted">No hay estados registrados</td></tr>
                     @endforelse
                 </tbody>
             </table>

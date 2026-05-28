@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EstadoSolicitud;
 use App\Models\PeriodoAdministrativo;
 use App\Models\Solicitud;
 use Illuminate\Support\Facades\Auth;
 
 class ResumenPermisosController extends Controller
 {
-    private const ESTADO_APROBADO = 'Aprobado';
+    private const ESTADO_APROBADO = EstadoSolicitud::CODIGO_APROBADO;
     private const TIPO_CON_GOCE = 1;
     private const TIPO_SIN_GOCE = 2;
     private const TIPO_DEFUNCION = 3;
@@ -31,7 +32,7 @@ class ResumenPermisosController extends Controller
 
         $solicitudes = Solicitud::with(['tipo', 'parentesco', 'restauraciones'])
             ->where('user_id', $userId)
-            ->whereHas('estado', fn ($q) => $q->where('nombre', self::ESTADO_APROBADO))
+            ->whereHas('estado', fn ($q) => $q->where('codigo', self::ESTADO_APROBADO))
             ->where('periodo_id', $periodoActivo->id)
             ->orderBy('fecha_desde')
             ->get();

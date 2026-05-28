@@ -10,14 +10,14 @@ class EstadosSolicitudSeeder extends Seeder
     public function run(): void
     {
         $estados = [
-            ['nombre' => 'Pendiente'],
-            ['nombre' => 'Aprobado'],
-            ['nombre' => 'Rechazado'],
-            ['nombre' => 'Anulado'],
+            ['codigo' => 'pendiente', 'nombre' => 'Pendiente', 'protegido' => true],
+            ['codigo' => 'aprobado', 'nombre' => 'Aprobado', 'protegido' => true],
+            ['codigo' => 'rechazado', 'nombre' => 'Rechazado', 'protegido' => true],
+            ['codigo' => 'anulado', 'nombre' => 'Anulado', 'protegido' => true],
         ];
 
         foreach ($estados as $estado) {
-            EstadoSolicitud::firstOrCreate(['nombre' => $estado['nombre']]);
+            EstadoSolicitud::updateOrCreate(['codigo' => $estado['codigo']], $estado);
         }
     }
 }
