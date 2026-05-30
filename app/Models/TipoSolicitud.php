@@ -7,10 +7,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TipoSolicitud extends Model
 {
+    public const CODIGO_CON_GOCE = 'con_goce';
+    public const CODIGO_SIN_GOCE = 'sin_goce';
+    public const CODIGO_DEFUNCION = 'defuncion';
+    public const CODIGO_VARIOS = 'varios';
+
     protected $table = 'tipos_solicitud';
+
     protected $fillable = [
-        'nombre', 
-        'descripcion'
+        'codigo',
+        'nombre',
+        'descripcion',
+        'protegido',
+    ];
+
+    protected $casts = [
+        'protegido' => 'boolean',
     ];
 
     public function solicitudes(): HasMany

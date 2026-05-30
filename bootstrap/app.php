@@ -19,9 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withProviders([
-        App\Providers\SessionUserProvider::class, // 👈 agrega esta línea
+        App\Providers\SessionUserProvider::class,
     ])
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
-

@@ -74,7 +74,7 @@
                         <a href="{{ route('resoluciones.index') }}" class="btn btn-outline-primary text-start py-3">
                             <i class="bi bi-journal-check me-2"></i> Revisar solicitudes pendientes
                         </a>
-                        <a href="{{ route('reportes.mensuales') }}" class="btn btn-outline-primary text-start py-3">
+                        <a href="{{ route('reportes.mensual', ['mes' => now()->month, 'anio' => now()->year]) }}" target="_blank" class="btn btn-outline-primary text-start py-3">
                             <i class="bi bi-bar-chart-line me-2"></i> Ver reportes mensuales
                         </a>
                     </div>

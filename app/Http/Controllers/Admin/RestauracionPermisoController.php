@@ -7,19 +7,20 @@ use App\Http\Controllers\Controller;
 use App\Models\EstadoSolicitud;
 use App\Models\RestauracionPermiso;
 use App\Models\Solicitud;
+use App\Models\TipoSolicitud;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class RestauracionPermisoController extends Controller
 {
-    private const TIPO_CON_GOCE = 1;
+    private const TIPO_CON_GOCE = TipoSolicitud::CODIGO_CON_GOCE;
     private const ESTADO_APROBADO = EstadoSolicitud::CODIGO_APROBADO;
 
     public function index()
     {
         $solicitudes = Solicitud::with(['usuario', 'tipo', 'validador'])
             ->withSum('restauraciones', 'dias_restaurados')
-            ->where('tipo_solicitud_id', self::TIPO_CON_GOCE)
+            ->whereHas('tipo', fn ($q) => $q->where('codigo', self::TIPO_CON_GOCE))
             ->whereHas('estado', fn ($q) => $q->where('codigo', self::ESTADO_APROBADO))
             ->orderByDesc('fecha_revision')
             ->orderByDesc('created_at')
@@ -48,7 +49,7 @@ class RestauracionPermisoController extends Controller
 
         $solicitud = Solicitud::withSum('restauraciones', 'dias_restaurados')
             ->where('id', $validated['solicitud_id'])
-            ->where('tipo_solicitud_id', self::TIPO_CON_GOCE)
+            ->whereHas('tipo', fn ($q) => $q->where('codigo', self::TIPO_CON_GOCE))
             ->whereHas('estado', fn ($q) => $q->where('codigo', self::ESTADO_APROBADO))
             ->firstOrFail();
 

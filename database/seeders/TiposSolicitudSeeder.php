@@ -2,22 +2,42 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\TipoSolicitud;
+use Illuminate\Database\Seeder;
 
 class TiposSolicitudSeeder extends Seeder
 {
     public function run(): void
     {
         $tipos = [
-            ['nombre' => 'Con goce de sueldo', 'descripcion' => 'Permiso administrativo con remuneración.'],
-            ['nombre' => 'Sin goce de sueldo', 'descripcion' => 'Permiso administrativo sin remuneración.'],
-            ['nombre' => 'Permiso por defunción', 'descripcion' => 'Por fallecimiento de familiar directo.'],
-            ['nombre' => 'Permisos varios', 'descripcion' => 'Permisos especiales o situaciones excepcionales.'],
+            [
+                'codigo' => TipoSolicitud::CODIGO_CON_GOCE,
+                'nombre' => 'Con goce de sueldo',
+                'descripcion' => 'Permiso administrativo con remuneracion.',
+                'protegido' => true,
+            ],
+            [
+                'codigo' => TipoSolicitud::CODIGO_SIN_GOCE,
+                'nombre' => 'Sin goce de sueldo',
+                'descripcion' => 'Permiso administrativo sin remuneracion.',
+                'protegido' => true,
+            ],
+            [
+                'codigo' => TipoSolicitud::CODIGO_DEFUNCION,
+                'nombre' => 'Permiso por defuncion',
+                'descripcion' => 'Por fallecimiento de familiar directo.',
+                'protegido' => true,
+            ],
+            [
+                'codigo' => TipoSolicitud::CODIGO_VARIOS,
+                'nombre' => 'Permisos varios',
+                'descripcion' => 'Permisos especiales o situaciones excepcionales.',
+                'protegido' => true,
+            ],
         ];
 
         foreach ($tipos as $tipo) {
-            \App\Models\TipoSolicitud::firstOrCreate(['nombre' => $tipo['nombre']], $tipo);
+            TipoSolicitud::updateOrCreate(['codigo' => $tipo['codigo']], $tipo);
         }
     }
 }

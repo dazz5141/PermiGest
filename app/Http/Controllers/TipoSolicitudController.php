@@ -6,6 +6,7 @@ use App\Models\TipoSolicitud;
 use Illuminate\Http\Request;
 use App\Helpers\AuditoriaHelper;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class TipoSolicitudController extends Controller
 {
@@ -36,7 +37,12 @@ class TipoSolicitudController extends Controller
             'descripcion' => 'nullable|string|max:255',
         ]);
 
-        $tipo = TipoSolicitud::create($request->only('nombre', 'descripcion'));
+        $tipo = TipoSolicitud::create([
+            'codigo' => $this->generarCodigo($request->nombre),
+            'nombre' => $request->nombre,
+            'descripcion' => $request->descripcion,
+            'protegido' => false,
+        ]);
 
         /**
          * AUDITORÍA — creación
@@ -59,6 +65,11 @@ class TipoSolicitudController extends Controller
     public function edit($id)
     {
         $tipo = TipoSolicitud::findOrFail($id);
+
+        if ($tipo->protegido) {
+            abort(403, 'Este tipo base no se puede editar.');
+        }
+
         return view('admin.tipos_solicitud.edit', compact('tipo'));
     }
 
@@ -68,6 +79,10 @@ class TipoSolicitudController extends Controller
     public function update(Request $request, $id)
     {
         $tipo = TipoSolicitud::findOrFail($id);
+
+        if ($tipo->protegido) {
+            abort(403, 'Este tipo base no se puede editar.');
+        }
 
         // Guardar datos anteriores
         $oldData = $tipo->toArray();
@@ -102,6 +117,10 @@ class TipoSolicitudController extends Controller
     {
         $tipo = TipoSolicitud::findOrFail($id);
 
+        if ($tipo->protegido) {
+            abort(403, 'Este tipo base no se puede eliminar.');
+        }
+
         // Datos antes de borrar
         $oldData = $tipo->toArray();
 
@@ -120,5 +139,19 @@ class TipoSolicitudController extends Controller
         );
 
         return redirect()->route('tipos.index')->with('success', 'Tipo de solicitud eliminado correctamente.');
+    }
+
+    private function generarCodigo(string $nombre): string
+    {
+        $codigoBase = Str::slug($nombre, '_') ?: 'tipo';
+        $codigo = $codigoBase;
+        $contador = 2;
+
+        while (TipoSolicitud::where('codigo', $codigo)->exists()) {
+            $codigo = $codigoBase . '_' . $contador;
+            $contador++;
+        }
+
+        return $codigo;
     }
 }

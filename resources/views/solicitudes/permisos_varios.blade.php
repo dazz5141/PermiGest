@@ -19,7 +19,7 @@
 
 <form action="{{ route('solicitudes.store') }}" method="POST">
     @csrf
-    <input type="hidden" name="tipo_solicitud_id" value="4">
+    <input type="hidden" name="tipo_codigo" value="{{ $tipoSolicitud->codigo }}">
 
     <div class="row">
         <div class="col-lg-5 mb-4">

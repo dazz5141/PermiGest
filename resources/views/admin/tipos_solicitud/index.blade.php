@@ -14,14 +14,16 @@
     </div>
 
     @include('components.alertas')
-    
+
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
                         <th>Nombre</th>
-                        <th>Descripción</th>
+                        <th>Codigo</th>
+                        <th>Descripcion</th>
+                        <th>Tipo</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -29,29 +31,41 @@
                     @forelse($tipos as $tipo)
                         <tr>
                             <td>{{ $tipo->nombre }}</td>
-                            <td>{{ $tipo->descripcion ?? '—' }}</td>
+                            <td><code>{{ $tipo->codigo ?? '-' }}</code></td>
+                            <td>{{ $tipo->descripcion ?? '-' }}</td>
                             <td>
-                                <a href="{{ route('tipos.edit', $tipo->id) }}" class="btn btn-sm btn-warning me-1">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
-                                <form action="{{ route('tipos.destroy', $tipo->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="btn btn-sm btn-danger"
-                                            data-confirm
-                                            data-confirm-title="¿Eliminar tipo de solicitud?"
-                                            data-confirm-text="Esta acción eliminará el tipo de solicitud de forma permanente."
-                                            data-confirm-btn="Sí, eliminar"
-                                            data-cancel-btn="Cancelar"
-                                            data-confirm-icon="warning">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                @if($tipo->protegido)
+                                    <span class="badge bg-primary">Base</span>
+                                @else
+                                    <span class="badge bg-secondary">Personalizado</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($tipo->protegido)
+                                    <span class="text-muted small">Protegido</span>
+                                @else
+                                    <a href="{{ route('tipos.edit', $tipo->id) }}" class="btn btn-sm btn-warning me-1">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <form action="{{ route('tipos.destroy', $tipo->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger"
+                                                data-confirm
+                                                data-confirm-title="Eliminar tipo de solicitud?"
+                                                data-confirm-text="Esta accion eliminara el tipo de solicitud de forma permanente."
+                                                data-confirm-btn="Si, eliminar"
+                                                data-cancel-btn="Cancelar"
+                                                data-confirm-icon="warning">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="text-center text-muted">No hay tipos registrados</td></tr>
+                        <tr><td colspan="5" class="text-center text-muted">No hay tipos registrados</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -59,7 +73,6 @@
     </div>
 </div>
 
-<!-- Modal Nuevo Tipo -->
 <div class="modal fade" id="crearTipoModal" tabindex="-1" aria-labelledby="crearTipoLabel" aria-hidden="true">
     <div class="modal-dialog">
         <form class="modal-content" method="POST" action="{{ route('tipos.store') }}">
@@ -74,7 +87,7 @@
                     <input type="text" class="form-control" name="nombre" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Descripción</label>
+                    <label class="form-label">Descripcion</label>
                     <textarea class="form-control" name="descripcion" rows="3"></textarea>
                 </div>
             </div>
@@ -82,9 +95,9 @@
                 <button type="submit"
                         class="btn btn-primary"
                         data-confirm
-                        data-confirm-title="¿Crear nuevo tipo de solicitud?"
-                        data-confirm-text="Se agregará un nuevo tipo de solicitud al sistema."
-                        data-confirm-btn="Sí, crear"
+                        data-confirm-title="Crear nuevo tipo de solicitud?"
+                        data-confirm-text="Se agregara un nuevo tipo de solicitud al sistema."
+                        data-confirm-btn="Si, crear"
                         data-cancel-btn="Cancelar"
                         data-confirm-icon="question">
                     <i class="bi bi-save me-1"></i> Guardar

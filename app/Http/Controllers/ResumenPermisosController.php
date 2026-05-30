@@ -5,15 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\EstadoSolicitud;
 use App\Models\PeriodoAdministrativo;
 use App\Models\Solicitud;
+use App\Models\TipoSolicitud;
 use Illuminate\Support\Facades\Auth;
 
 class ResumenPermisosController extends Controller
 {
     private const ESTADO_APROBADO = EstadoSolicitud::CODIGO_APROBADO;
-    private const TIPO_CON_GOCE = 1;
-    private const TIPO_SIN_GOCE = 2;
-    private const TIPO_DEFUNCION = 3;
-    private const TIPO_VARIOS = 4;
+    private const TIPO_CON_GOCE = TipoSolicitud::CODIGO_CON_GOCE;
+    private const TIPO_SIN_GOCE = TipoSolicitud::CODIGO_SIN_GOCE;
+    private const TIPO_DEFUNCION = TipoSolicitud::CODIGO_DEFUNCION;
+    private const TIPO_VARIOS = TipoSolicitud::CODIGO_VARIOS;
     private const TOTAL_DIAS_ANUALES_CON_GOCE = 6.0;
 
     public function index()
@@ -37,10 +38,10 @@ class ResumenPermisosController extends Controller
             ->orderBy('fecha_desde')
             ->get();
 
-        $conGoce = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === self::TIPO_CON_GOCE);
-        $sinGoce = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === self::TIPO_SIN_GOCE);
-        $defuncion = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === self::TIPO_DEFUNCION);
-        $varios = $solicitudes->filter(fn ($s) => (int) $s->tipo_solicitud_id === self::TIPO_VARIOS);
+        $conGoce = $solicitudes->filter(fn ($s) => $s->tipo?->codigo === self::TIPO_CON_GOCE);
+        $sinGoce = $solicitudes->filter(fn ($s) => $s->tipo?->codigo === self::TIPO_SIN_GOCE);
+        $defuncion = $solicitudes->filter(fn ($s) => $s->tipo?->codigo === self::TIPO_DEFUNCION);
+        $varios = $solicitudes->filter(fn ($s) => $s->tipo?->codigo === self::TIPO_VARIOS);
 
         $totalConGoce = $conGoce->sum(fn ($solicitud) => $solicitud->dias_netos_descontados);
         $totalSinGoce = $sinGoce->sum(fn ($solicitud) => $solicitud->dias_registrados);

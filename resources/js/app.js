@@ -1,1 +1,1 @@
-import './bootstrap';
+/* Vite entry reserved for future compiled scripts. */

@@ -55,10 +55,16 @@ class ResolucionController extends Controller
             'comentario' => 'nullable|string|max:1000',
         ]);
 
-        $solicitud = Solicitud::findOrFail($id);
+        $solicitud = Solicitud::with(['estado', 'usuario'])->findOrFail($id);
 
         if (!$this->puedeResolver(Auth::user(), $solicitud)) {
             abort(403, 'No tienes permiso para resolver esta solicitud.');
+        }
+
+        if ($solicitud->estado?->codigo !== self::ESTADO_PENDIENTE) {
+            return back()->withErrors([
+                'solicitud' => 'Esta solicitud ya fue resuelta y no puede modificarse nuevamente.',
+            ]);
         }
 
         $oldData = $solicitud->toArray();

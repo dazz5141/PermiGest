@@ -19,10 +19,10 @@ use Illuminate\Support\Str;
 
 class SolicitudController extends Controller
 {
-    private const TIPO_CON_GOCE = 1;
-    private const TIPO_SIN_GOCE = 2;
-    private const TIPO_DEFUNCION = 3;
-    private const TIPO_VARIOS = 4;
+    private const TIPO_CON_GOCE = TipoSolicitud::CODIGO_CON_GOCE;
+    private const TIPO_SIN_GOCE = TipoSolicitud::CODIGO_SIN_GOCE;
+    private const TIPO_DEFUNCION = TipoSolicitud::CODIGO_DEFUNCION;
+    private const TIPO_VARIOS = TipoSolicitud::CODIGO_VARIOS;
     private const ESTADO_PENDIENTE = EstadoSolicitud::CODIGO_PENDIENTE;
     private const ESTADO_APROBADO = EstadoSolicitud::CODIGO_APROBADO;
     private const TOTAL_DIAS_CON_GOCE = 6.0;
@@ -65,6 +65,11 @@ class SolicitudController extends Controller
             abort(404, 'Tipo de solicitud no valido.');
         }
 
+        $tipoSolicitud = TipoSolicitud::where('codigo', $tipo)->first();
+        if (!$tipoSolicitud) {
+            abort(500, 'No existe el tipo base de solicitud configurado.');
+        }
+
         $feriados = Feriado::pluck('fecha')->toArray();
         $totalDias = self::TOTAL_DIAS_CON_GOCE;
         $diasDisponibles = $this->obtenerDiasDisponiblesConGoce($usuario->id, $periodoActivo->id);
@@ -84,7 +89,7 @@ class SolicitudController extends Controller
             'diasTomados',
             'diasDisponibles',
             'feriados'
-        ));
+        ) + ['tipoSolicitud' => $tipoSolicitud]);
     }
 
     /**
@@ -102,7 +107,7 @@ class SolicitudController extends Controller
         }
 
         $rules = [
-            'tipo_solicitud_id' => 'required|exists:tipos_solicitud,id',
+            'tipo_codigo' => 'required|in:con_goce,sin_goce,defuncion,varios',
             'fecha_desde' => 'required|date|after_or_equal:today',
             'fecha_hasta' => 'required|date|after_or_equal:fecha_desde',
             'hora_desde' => 'nullable|date_format:H:i',
@@ -110,20 +115,29 @@ class SolicitudController extends Controller
             'password' => ['required', 'current_password'],
         ];
 
-        $tipoSolicitudId = (int) $request->tipo_solicitud_id;
+        $tipoCodigo = $request->tipo_codigo;
+        $tipoSolicitud = TipoSolicitud::where('codigo', $tipoCodigo)->first();
 
-        if ($tipoSolicitudId === self::TIPO_CON_GOCE) {
+        if (!$tipoSolicitud) {
+            return back()->withErrors([
+                'tipo_codigo' => 'No existe el tipo base de solicitud configurado.'
+            ])->withInput();
+        }
+
+        $tipoSolicitudId = (int) $tipoSolicitud->id;
+
+        if ($tipoCodigo === self::TIPO_CON_GOCE) {
             $rules['motivo'] = 'required|string|max:1000';
             $rules['dias_solicitados'] = 'required|numeric|min:0.5|max:6';
             $rules['jornada'] = 'nullable|in:manana,tarde';
-        } elseif ($tipoSolicitudId === self::TIPO_SIN_GOCE) {
+        } elseif ($tipoCodigo === self::TIPO_SIN_GOCE) {
             $rules['motivo'] = 'required|string|max:1000';
             $rules['dias_solicitados'] = 'required|integer|min:1';
-        } elseif ($tipoSolicitudId === self::TIPO_DEFUNCION) {
+        } elseif ($tipoCodigo === self::TIPO_DEFUNCION) {
             $rules['parentesco_id'] = 'required|exists:parentescos,id';
             $rules['dias_solicitados'] = 'required|integer|min:1|max:7';
             $rules['motivo'] = 'nullable|string|max:1000';
-        } elseif ($tipoSolicitudId === self::TIPO_VARIOS) {
+        } elseif ($tipoCodigo === self::TIPO_VARIOS) {
             $rules['tipo_vario_id'] = 'required|exists:tipos_varios,id';
             $rules['motivo'] = 'required|string|max:1000';
         }
@@ -156,12 +170,12 @@ class SolicitudController extends Controller
         $esMedioDia = in_array($jornada, ['manana', 'tarde'], true) || $diasSolicitados === 0.5;
         $diasHabilesRango = $this->contarDiasHabiles($desde, $hasta);
 
-        if ($tipoSolicitudId === self::TIPO_VARIOS) {
+        if ($tipoCodigo === self::TIPO_VARIOS) {
             $diasSolicitados = (float) $diasHabilesRango;
         }
 
         if ($esMedioDia) {
-            if ($tipoSolicitudId !== self::TIPO_CON_GOCE) {
+            if ($tipoCodigo !== self::TIPO_CON_GOCE) {
                 return back()->withErrors([
                     'dias_solicitados' => 'Solo los permisos con goce pueden solicitarse por medio dia.'
                 ])->withInput();
@@ -180,7 +194,7 @@ class SolicitudController extends Controller
             }
 
             $diasSolicitados = 0.5;
-        } elseif (in_array($tipoSolicitudId, [
+        } elseif (in_array($tipoCodigo, [
             self::TIPO_CON_GOCE,
             self::TIPO_SIN_GOCE,
             self::TIPO_DEFUNCION,
@@ -190,13 +204,13 @@ class SolicitudController extends Controller
             ])->withInput();
         }
 
-        if ($tipoSolicitudId === self::TIPO_CON_GOCE && !$esMedioDia && floor($diasSolicitados) !== $diasSolicitados) {
+        if ($tipoCodigo === self::TIPO_CON_GOCE && !$esMedioDia && floor($diasSolicitados) !== $diasSolicitados) {
             return back()->withErrors([
                 'dias_solicitados' => 'Los permisos con goce solo permiten dias completos o medio dia.'
             ])->withInput();
         }
 
-        if ($tipoSolicitudId === self::TIPO_CON_GOCE) {
+        if ($tipoCodigo === self::TIPO_CON_GOCE) {
             $diasDisponibles = $this->obtenerDiasDisponiblesConGoce($usuario->id, $periodoActivo->id);
 
             if ($diasSolicitados > $diasDisponibles) {
@@ -270,11 +284,7 @@ class SolicitudController extends Controller
         $solicitud = Solicitud::with(['usuario', 'tipo', 'estado', 'resoluciones', 'ultimaResolucion', 'restauraciones.usuario'])
             ->findOrFail($id);
 
-        if (
-            $solicitud->user_id === $usuario->id ||
-            ($usuario->rol?->nombre === 'jefe_directo' && $solicitud->usuario->jefe_directo_id === $usuario->id) ||
-            in_array($usuario->rol?->nombre, ['secretaria', 'encargado_sistema', 'admin'])
-        ) {
+        if ($this->puedeVerSolicitud($usuario, $solicitud)) {
             return view('solicitudes.show', compact('solicitud'));
         }
 
@@ -284,13 +294,12 @@ class SolicitudController extends Controller
     public function pdf(Solicitud $solicitud)
     {
         $user = auth()->user();
-        $rol = strtolower($user->rol->nombre ?? '');
-
-        if (!in_array($rol, ['admin', 'encargado_sistema', 'secretaria', 'jefe_directo'])) {
-            abort(403, 'No tienes permiso para imprimir esta ficha.');
-        }
 
         $solicitud->load(['usuario', 'validador', 'tipo', 'estado', 'ultimaResolucion', 'restauraciones.usuario']);
+
+        if (!$this->puedeVerSolicitud($user, $solicitud)) {
+            abort(403, 'No tienes permiso para imprimir esta ficha.');
+        }
 
         $pdf = Pdf::loadView('solicitudes.pdf', [
             'solicitud' => $solicitud,
@@ -299,11 +308,37 @@ class SolicitudController extends Controller
         return $pdf->stream('permiso_' . $solicitud->id . '.pdf');
     }
 
+    private function puedeVerSolicitud($usuario, Solicitud $solicitud): bool
+    {
+        $rol = strtolower($usuario->rol?->nombre ?? '');
+
+        if ($solicitud->user_id === $usuario->id) {
+            return true;
+        }
+
+        if (in_array($rol, ['secretaria', 'encargado_sistema', 'admin'], true)) {
+            return true;
+        }
+
+        if ($rol !== 'jefe_directo') {
+            return false;
+        }
+
+        return (int) ($solicitud->usuario?->jefe_directo_id ?? 0) === (int) $usuario->id
+            || (int) ($solicitud->validador_id ?? 0) === (int) $usuario->id;
+    }
+
     private function obtenerDiasDisponiblesConGoce(int $userId, int $periodoId): float
     {
+        $tipoConGoceId = TipoSolicitud::where('codigo', self::TIPO_CON_GOCE)->value('id');
+
+        if (!$tipoConGoceId) {
+            return self::TOTAL_DIAS_CON_GOCE;
+        }
+
         $diasTomados = Solicitud::withSum('restauraciones', 'dias_restaurados')
             ->where('user_id', $userId)
-            ->where('tipo_solicitud_id', self::TIPO_CON_GOCE)
+            ->where('tipo_solicitud_id', $tipoConGoceId)
             ->whereHas('estado', fn ($q) => $q->where('codigo', self::ESTADO_APROBADO))
             ->where('periodo_id', $periodoId)
             ->get()

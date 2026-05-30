@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Reporte Mensual de Permisos - {{ ucfirst($nombreMes) }} {{ $año }}</title>
+<title>Reporte Mensual de Permisos - {{ ucfirst($nombreMes) }} {{ $anio }}</title>
 <style>
   * { font-family: DejaVu Sans, Arial, sans-serif; font-size: 12px; }
   h3 { text-align: center; margin-bottom: 5px; }
@@ -16,7 +16,7 @@
 <body>
 
   <h3>REPORTE MENSUAL DE PERMISOS</h3>
-  <p><strong>Mes:</strong> {{ ucfirst($nombreMes) }} {{ $año }}</p>
+  <p><strong>Mes:</strong> {{ ucfirst($nombreMes) }} {{ $anio }}</p>
 
   <table>
     <thead>
@@ -25,21 +25,22 @@
         <th>Tipo</th>
         <th>Desde</th>
         <th>Hasta</th>
-        <th>Días</th>
+        <th>Dias</th>
         <th>Estado</th>
         <th>Comentario</th>
       </tr>
     </thead>
     <tbody>
       @forelse($resoluciones as $res)
+        @php($solicitud = $res->solicitud)
         <tr>
-          <td>{{ $res->solicitud->usuario->nombres }} {{ $res->solicitud->usuario->apellidos }}</td>
-          <td>{{ $res->solicitud->tipo->nombre }}</td>
-          <td>{{ $res->solicitud->fecha_desde?->format('d/m/Y') }}</td>
-          <td>{{ $res->solicitud->fecha_hasta?->format('d/m/Y') }}</td>
-          <td>{{ $res->solicitud->dias_solicitados ?? '—' }}</td>
-          <td>{{ ucfirst($res->solicitud->estado->nombre) }}</td>
-          <td>{{ $res->comentario ?? '—' }}</td>
+          <td>{{ $solicitud?->usuario?->nombre_completo ?? '-' }}</td>
+          <td>{{ $solicitud?->tipo?->nombre ?? '-' }}</td>
+          <td>{{ $solicitud?->fecha_desde?->format('d/m/Y') ?? '-' }}</td>
+          <td>{{ $solicitud?->fecha_hasta?->format('d/m/Y') ?? '-' }}</td>
+          <td>{{ $solicitud?->dias_solicitados ?? '-' }}</td>
+          <td>{{ $solicitud?->estado?->nombre ?? '-' }}</td>
+          <td>{{ $res->comentario ?? '-' }}</td>
         </tr>
       @empty
         <tr>
