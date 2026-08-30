@@ -8,11 +8,15 @@ use App\Models\Resolucion;
 use App\Models\Solicitud;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ResolucionController extends Controller
 {
     private const ESTADO_PENDIENTE = EstadoSolicitud::CODIGO_PENDIENTE;
+
     private const ESTADO_APROBADO = EstadoSolicitud::CODIGO_APROBADO;
+
     private const ESTADO_RECHAZADO = EstadoSolicitud::CODIGO_RECHAZADO;
 
     /**
@@ -50,57 +54,62 @@ class ResolucionController extends Controller
     {
         $usuarioActualId = (int) Auth::user()->id;
 
-        $request->validate([
+        $validated = $request->validate([
             'accion' => 'required|in:aprobado,rechazado',
             'comentario' => 'nullable|string|max:1000',
         ]);
 
-        $solicitud = Solicitud::with(['estado', 'usuario'])->findOrFail($id);
-
-        if (!$this->puedeResolver(Auth::user(), $solicitud)) {
-            abort(403, 'No tienes permiso para resolver esta solicitud.');
-        }
-
-        if ($solicitud->estado?->codigo !== self::ESTADO_PENDIENTE) {
-            return back()->withErrors([
-                'solicitud' => 'Esta solicitud ya fue resuelta y no puede modificarse nuevamente.',
-            ]);
-        }
-
-        $oldData = $solicitud->toArray();
-        $estadoNombre = $request->accion === 'aprobado'
+        $estadoNombre = $validated['accion'] === 'aprobado'
             ? self::ESTADO_APROBADO
             : self::ESTADO_RECHAZADO;
 
         $estadoId = EstadoSolicitud::where('codigo', $estadoNombre)->value('id');
 
-        if (!$estadoId) {
+        if (! $estadoId) {
             abort(500, 'No se encontro el estado de solicitud requerido.');
         }
 
-        $solicitud->update([
-            'estado_solicitud_id' => $estadoId,
-            'validador_id' => $usuarioActualId,
-            'fecha_revision' => now(),
-            'observaciones_validador' => $request->comentario,
-            'firma_validador' => true,
-        ]);
+        DB::transaction(function () use ($id, $estadoId, $usuarioActualId, $validated): void {
+            $solicitud = Solicitud::with(['estado', 'usuario'])
+                ->lockForUpdate()
+                ->findOrFail($id);
 
-        Resolucion::create([
-            'solicitud_id' => $solicitud->id,
-            'user_id' => $usuarioActualId,
-            'accion' => $request->accion,
-            'comentario' => $request->comentario,
-        ]);
+            if (! $this->puedeResolver(Auth::user(), $solicitud)) {
+                abort(403, 'No tienes permiso para resolver esta solicitud.');
+            }
 
-        AuditoriaHelper::registrar(
-            'solicitudes',
-            $solicitud->id,
-            $request->accion === 'aprobado' ? 'solicitud_aprobada' : 'solicitud_rechazada',
-            $usuarioActualId,
-            $oldData,
-            $solicitud->fresh()->toArray()
-        );
+            if ($solicitud->estado?->codigo !== self::ESTADO_PENDIENTE) {
+                throw ValidationException::withMessages([
+                    'solicitud' => 'Esta solicitud ya fue resuelta y no puede modificarse nuevamente.',
+                ]);
+            }
+
+            $oldData = $solicitud->toArray();
+
+            $solicitud->update([
+                'estado_solicitud_id' => $estadoId,
+                'validador_id' => $usuarioActualId,
+                'fecha_revision' => now(),
+                'observaciones_validador' => $validated['comentario'] ?? null,
+                'firma_validador' => true,
+            ]);
+
+            Resolucion::create([
+                'solicitud_id' => $solicitud->id,
+                'user_id' => $usuarioActualId,
+                'accion' => $validated['accion'],
+                'comentario' => $validated['comentario'] ?? null,
+            ]);
+
+            AuditoriaHelper::registrar(
+                'solicitudes',
+                $solicitud->id,
+                $validated['accion'] === 'aprobado' ? 'solicitud_aprobada' : 'solicitud_rechazada',
+                $usuarioActualId,
+                $oldData,
+                $solicitud->fresh()->toArray()
+            );
+        }, 3);
 
         return back()->with('success', 'Resolucion registrada correctamente.');
     }

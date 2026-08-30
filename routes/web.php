@@ -58,7 +58,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/usuarios/{id}/edit', [UsuarioController::class, 'edit'])->name('admin.usuarios.edit');
         Route::put('/usuarios/{id}', [UsuarioController::class, 'update'])->name('admin.usuarios.update');
         Route::post('/usuarios/{id}/toggle', [UsuarioController::class, 'toggle'])->name('admin.usuarios.toggle');
-        Route::post('/usuarios/{id}/reset-password', [UsuarioController::class, 'resetPassword'])->name('admin.usuarios.reset');
+        Route::post('/usuarios/{id}/reset-password', [UsuarioController::class, 'resetPassword'])
+            ->middleware('throttle:password-reset')
+            ->name('admin.usuarios.reset');
 
         Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
         Route::resource('feriados', FeriadoController::class)->names('admin.feriados')->except('show');

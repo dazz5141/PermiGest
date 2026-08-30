@@ -6,6 +6,9 @@ use App\Models\Rol;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
+use RuntimeException;
 
 class UserSeeder extends Seeder
 {
@@ -16,6 +19,14 @@ class UserSeeder extends Seeder
             ->get()
             ->keyBy('nombre');
 
+        $crearUsuariosDemo = app()->environment(['local', 'testing']);
+
+        if (! $crearUsuariosDemo && User::where('rol_id', $roles['admin']->id)->exists()) {
+            return;
+        }
+
+        $adminPassword = $crearUsuariosDemo ? 'admin123' : $this->initialAdminPassword();
+
         $admin = User::firstOrCreate(
             ['run' => '11.111.111-1'],
             [
@@ -24,12 +35,16 @@ class UserSeeder extends Seeder
                 'correo_institucional' => 'admin@colegio.cl',
                 'cargo' => 'Administrador General',
                 'departamento' => 'Direccion',
-                'password' => Hash::make('admin123'),
+                'password' => Hash::make($adminPassword),
                 'activo' => 1,
                 'rol_id' => $roles['admin']->id,
                 'jefe_directo_id' => null,
             ]
         );
+
+        if (! $crearUsuariosDemo) {
+            return;
+        }
 
         User::firstOrCreate(
             ['run' => '12.345.678-5'],
@@ -69,7 +84,7 @@ class UserSeeder extends Seeder
                 'correo_institucional' => 'jefe@colegio.cl',
                 'cargo' => 'Director del Establecimiento',
                 'departamento' => 'Direccion',
-                'password' => Hash::make('jefe123'),
+                'password' => Hash::make('jefe1234'),
                 'activo' => 1,
                 'rol_id' => $roles['jefe_directo']->id,
                 'jefe_directo_id' => $admin->id,
@@ -90,5 +105,22 @@ class UserSeeder extends Seeder
                 'jefe_directo_id' => $director->id,
             ]
         );
+    }
+
+    private function initialAdminPassword(): string
+    {
+        $password = config('permigest.initial_admin_password');
+        $validator = Validator::make(
+            ['password' => $password],
+            ['password' => ['required', 'string', Password::min(12)->letters()->numbers()]]
+        );
+
+        if ($validator->fails()) {
+            throw new RuntimeException(
+                'Configura PERMIGEST_INITIAL_ADMIN_PASSWORD con al menos 12 caracteres, letras y numeros antes del primer seed.'
+            );
+        }
+
+        return $password;
     }
 }

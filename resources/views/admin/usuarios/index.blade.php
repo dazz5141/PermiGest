@@ -15,6 +15,14 @@
 
     @include('components.alertas')
 
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ $errors->first() }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body">
             <div class="table-responsive usuarios-table-wrap">
@@ -162,11 +170,12 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Contrasena</label>
-                        <input type="password" class="form-control" name="password" required>
+                        <input type="password" class="form-control" name="password" minlength="8" autocomplete="new-password" required>
+                        <div class="form-text">Minimo 8 caracteres, con letras y numeros.</div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Confirmar contrasena</label>
-                        <input type="password" class="form-control" name="password_confirmation" required>
+                        <input type="password" class="form-control" name="password_confirmation" minlength="8" autocomplete="new-password" required>
                     </div>
                 </div>
             </div>
@@ -194,12 +203,18 @@
                     Cambiando contrasena de <span id="resetUserName" class="fw-semibold text-dark"></span>
                 </p>
                 <div class="mb-3">
+                    <label class="form-label">Tu contrasena actual</label>
+                    <input type="password" name="current_password" class="form-control" autocomplete="current-password" required>
+                    <div class="form-text">Confirma que eres quien realiza este cambio.</div>
+                </div>
+                <div class="mb-3">
                     <label class="form-label">Nueva contrasena</label>
-                    <input type="password" name="password" class="form-control" required>
+                    <input type="password" name="password" class="form-control" minlength="8" autocomplete="new-password" required>
+                    <div class="form-text">Minimo 8 caracteres, con letras y numeros.</div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Confirmar contrasena</label>
-                    <input type="password" name="password_confirmation" class="form-control" required>
+                    <input type="password" name="password_confirmation" class="form-control" minlength="8" autocomplete="new-password" required>
                 </div>
             </div>
             <div class="modal-footer">

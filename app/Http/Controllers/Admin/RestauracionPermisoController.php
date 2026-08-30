@@ -10,10 +10,13 @@ use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class RestauracionPermisoController extends Controller
 {
     private const TIPO_CON_GOCE = TipoSolicitud::CODIGO_CON_GOCE;
+
     private const ESTADO_APROBADO = EstadoSolicitud::CODIGO_APROBADO;
 
     public function index()
@@ -41,61 +44,66 @@ class RestauracionPermisoController extends Controller
         $validated = $request->validate([
             'solicitud_id' => 'required|exists:solicitudes,id',
             'tipo' => 'required|in:total,parcial',
-            'dias_restaurados' => 'nullable|numeric|min:0.5',
+            'dias_restaurados' => 'nullable|numeric|min:0.5|multiple_of:0.5',
             'motivo' => 'required|string|max:255',
             'observacion' => 'required|string|max:1000',
             'documento_referencia' => 'nullable|string|max:255',
+        ], [
+            'dias_restaurados.multiple_of' => 'Los dias a restaurar deben indicarse en incrementos de 0.5.',
         ]);
 
-        $solicitud = Solicitud::withSum('restauraciones', 'dias_restaurados')
-            ->where('id', $validated['solicitud_id'])
-            ->whereHas('tipo', fn ($q) => $q->where('codigo', self::TIPO_CON_GOCE))
-            ->whereHas('estado', fn ($q) => $q->where('codigo', self::ESTADO_APROBADO))
-            ->firstOrFail();
+        DB::transaction(function () use ($validated, $usuarioActualId): void {
+            $solicitud = Solicitud::query()
+                ->where('id', $validated['solicitud_id'])
+                ->whereHas('tipo', fn ($q) => $q->where('codigo', self::TIPO_CON_GOCE))
+                ->whereHas('estado', fn ($q) => $q->where('codigo', self::ESTADO_APROBADO))
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $diasYaRestaurados = (float) ($solicitud->restauraciones_sum_dias_restaurados ?? 0);
-        $saldoRestaurable = max((float) $solicitud->dias_solicitados - $diasYaRestaurados, 0);
+            $diasYaRestaurados = (float) $solicitud->restauraciones()->sum('dias_restaurados');
+            $saldoRestaurable = max((float) $solicitud->dias_solicitados - $diasYaRestaurados, 0);
 
-        if ($saldoRestaurable <= 0) {
-            return back()->withErrors([
-                'solicitud_id' => 'La solicitud seleccionada ya no tiene dias disponibles para restaurar.',
+            if ($saldoRestaurable <= 0) {
+                throw ValidationException::withMessages([
+                    'solicitud_id' => 'La solicitud seleccionada ya no tiene dias disponibles para restaurar.',
+                ]);
+            }
+
+            $diasRestaurados = $validated['tipo'] === 'total'
+                ? $saldoRestaurable
+                : (float) ($validated['dias_restaurados'] ?? 0);
+
+            if ($validated['tipo'] === 'parcial' && $diasRestaurados <= 0) {
+                throw ValidationException::withMessages([
+                    'dias_restaurados' => 'Debes indicar la cantidad de dias a restaurar.',
+                ]);
+            }
+
+            if ($diasRestaurados > $saldoRestaurable) {
+                throw ValidationException::withMessages([
+                    'dias_restaurados' => 'No puedes restaurar mas dias que los efectivamente descontados.',
+                ]);
+            }
+
+            $restauracion = RestauracionPermiso::create([
+                'solicitud_id' => $solicitud->id,
+                'user_id' => $usuarioActualId,
+                'tipo' => $validated['tipo'],
+                'dias_restaurados' => $diasRestaurados,
+                'motivo' => $validated['motivo'],
+                'observacion' => $validated['observacion'],
+                'documento_referencia' => $validated['documento_referencia'] ?? null,
             ]);
-        }
 
-        $diasRestaurados = $validated['tipo'] === 'total'
-            ? $saldoRestaurable
-            : (float) ($validated['dias_restaurados'] ?? 0);
-
-        if ($validated['tipo'] === 'parcial' && $diasRestaurados <= 0) {
-            return back()->withErrors([
-                'dias_restaurados' => 'Debes indicar la cantidad de dias a restaurar.',
-            ])->withInput();
-        }
-
-        if ($diasRestaurados > $saldoRestaurable) {
-            return back()->withErrors([
-                'dias_restaurados' => 'No puedes restaurar mas dias que los efectivamente descontados.',
-            ])->withInput();
-        }
-
-        $restauracion = RestauracionPermiso::create([
-            'solicitud_id' => $solicitud->id,
-            'user_id' => $usuarioActualId,
-            'tipo' => $validated['tipo'],
-            'dias_restaurados' => $diasRestaurados,
-            'motivo' => $validated['motivo'],
-            'observacion' => $validated['observacion'],
-            'documento_referencia' => $validated['documento_referencia'] ?? null,
-        ]);
-
-        AuditoriaHelper::registrar(
-            'restauraciones_permiso',
-            $restauracion->id,
-            'solicitud_restaurada',
-            $usuarioActualId,
-            null,
-            $restauracion->toArray()
-        );
+            AuditoriaHelper::registrar(
+                'restauraciones_permiso',
+                $restauracion->id,
+                'solicitud_restaurada',
+                $usuarioActualId,
+                null,
+                $restauracion->toArray()
+            );
+        }, 3);
 
         return redirect()->route('admin.restauraciones.index')
             ->with('success', 'Restauracion registrada correctamente.');

@@ -8,8 +8,11 @@ use App\Models\Rol;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
 class UsuarioController extends Controller
@@ -39,8 +42,8 @@ class UsuarioController extends Controller
                 'nullable',
                 Rule::exists('users', 'id')->where(fn ($query) => $query->where('rol_id', $this->obtenerRolDirectorId())),
             ],
-            'password' => 'required|string|min:6|confirmed',
-        ]);
+            'password' => $this->passwordRules(),
+        ], $this->passwordMessages());
 
         try {
             $validated['run'] = $this->formatearRun($validated['run']);
@@ -66,7 +69,7 @@ class UsuarioController extends Controller
         $roles = $this->obtenerRolesGestionables();
         $jefes = $this->obtenerDirectoresActivos($usuario->id);
 
-        if (!$this->puedeGestionarUsuario($usuario)) {
+        if (! $this->puedeGestionarUsuario($usuario)) {
             abort(403, 'No tienes permiso para editar este usuario.');
         }
 
@@ -77,7 +80,7 @@ class UsuarioController extends Controller
     {
         $usuario = User::findOrFail($id);
 
-        if (!$this->puedeGestionarUsuario($usuario)) {
+        if (! $this->puedeGestionarUsuario($usuario)) {
             abort(403, 'No tienes permiso para editar este usuario.');
         }
 
@@ -86,8 +89,8 @@ class UsuarioController extends Controller
         $validated = $request->validate([
             'nombres' => 'required|string|max:100',
             'apellidos' => 'required|string|max:100',
-            'run' => 'required|string|max:15|unique:users,run,' . $usuario->id,
-            'correo_institucional' => 'required|email|max:150|unique:users,correo_institucional,' . $usuario->id,
+            'run' => 'required|string|max:15|unique:users,run,'.$usuario->id,
+            'correo_institucional' => 'required|email|max:150|unique:users,correo_institucional,'.$usuario->id,
             'cargo' => 'nullable|string|max:100',
             'departamento' => 'nullable|string|max:100',
             'rol_id' => ['required', 'exists:roles,id', Rule::in($rolesGestionablesIds)],
@@ -118,12 +121,12 @@ class UsuarioController extends Controller
     {
         $usuario = User::findOrFail($id);
 
-        if (!$this->puedeGestionarUsuario($usuario)) {
+        if (! $this->puedeGestionarUsuario($usuario)) {
             abort(403, 'No tienes permiso para cambiar el estado de este usuario.');
         }
 
         $oldData = $usuario->toArray();
-        $usuario->activo = !$usuario->activo;
+        $usuario->activo = ! $usuario->activo;
         $usuario->save();
 
         AuditoriaHelper::registrar(
@@ -142,23 +145,67 @@ class UsuarioController extends Controller
 
     public function resetPassword(Request $request, $id)
     {
-        $request->validate([
-            'password' => 'required|string|min:6|confirmed',
-        ]);
-
         $usuario = User::findOrFail($id);
 
-        if (!$this->puedeGestionarUsuario($usuario)) {
+        if (! $this->puedeGestionarUsuario($usuario)) {
             abort(403, 'No tienes permiso para restablecer la contrasena de este usuario.');
         }
 
-        $oldData = ['password' => 'encrypted'];
-        $usuario->password = Hash::make($request->password);
-        $usuario->save();
+        $validated = $request->validate([
+            'current_password' => ['required', 'current_password:web'],
+            'password' => $this->passwordRules(),
+        ], array_merge($this->passwordMessages(), [
+            'current_password.required' => 'Debes ingresar tu contrasena actual.',
+            'current_password.current_password' => 'La contrasena actual no coincide con tu cuenta.',
+        ]));
 
-        AuditoriaHelper::registrar('users', $usuario->id, 'usuario_password_restablecida', Auth::user()->id, $oldData, ['password' => 'encrypted']);
+        DB::transaction(function () use ($usuario, $validated): void {
+            $oldData = ['password' => 'encrypted'];
+
+            $usuario->password = Hash::make($validated['password']);
+            $usuario->setRememberToken(Str::random(60));
+            $usuario->save();
+
+            $this->invalidarSesionesUsuario($usuario);
+
+            AuditoriaHelper::registrar('users', $usuario->id, 'usuario_password_restablecida', Auth::user()->id, $oldData, ['password' => 'encrypted']);
+        });
 
         return redirect()->route('admin.usuarios.index')->with('success', 'Contrasena restablecida correctamente.');
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    private function passwordRules(): array
+    {
+        return ['required', 'string', 'confirmed', Password::min(8)->letters()->numbers()];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function passwordMessages(): array
+    {
+        return [
+            'password.required' => 'Debes ingresar una contrasena.',
+            'password.confirmed' => 'La confirmacion de la contrasena no coincide.',
+            'password.min' => 'La contrasena debe tener al menos 8 caracteres.',
+            'password.letters' => 'La contrasena debe incluir al menos una letra.',
+            'password.numbers' => 'La contrasena debe incluir al menos un numero.',
+        ];
+    }
+
+    private function invalidarSesionesUsuario(User $usuario): void
+    {
+        if (config('session.driver') !== 'database') {
+            return;
+        }
+
+        DB::connection(config('session.connection'))
+            ->table((string) config('session.table', 'sessions'))
+            ->where('user_id', $usuario->id)
+            ->delete();
     }
 
     private function formatearRun(string $run): string
@@ -169,7 +216,7 @@ class UsuarioController extends Controller
         $numero = substr($run, 0, -1);
         $dv = substr($run, -1);
 
-        if (!ctype_digit($numero)) {
+        if (! ctype_digit($numero)) {
             throw new \Exception('RUN invalido');
         }
 
@@ -196,7 +243,7 @@ class UsuarioController extends Controller
             throw new \Exception('RUN invalido');
         }
 
-        return number_format($numero, 0, '', '.') . '-' . $dv;
+        return number_format($numero, 0, '', '.').'-'.$dv;
     }
 
     private function obtenerRolDirectorId(): int
