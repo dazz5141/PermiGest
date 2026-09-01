@@ -10,21 +10,32 @@ use App\Models\PeriodoAdministrativo;
 use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
 use App\Models\TipoVario;
+use App\Models\User;
+use App\Notifications\SolicitudCreadaJefeDirecto;
+use App\Notifications\SolicitudCreadaSolicitante;
+use App\Support\NotificacionSegura;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class SolicitudController extends Controller
 {
     private const TIPO_CON_GOCE = TipoSolicitud::CODIGO_CON_GOCE;
+
     private const TIPO_SIN_GOCE = TipoSolicitud::CODIGO_SIN_GOCE;
+
     private const TIPO_DEFUNCION = TipoSolicitud::CODIGO_DEFUNCION;
+
     private const TIPO_VARIOS = TipoSolicitud::CODIGO_VARIOS;
+
     private const ESTADO_PENDIENTE = EstadoSolicitud::CODIGO_PENDIENTE;
+
     private const ESTADO_APROBADO = EstadoSolicitud::CODIGO_APROBADO;
+
     private const TOTAL_DIAS_CON_GOCE = 6.0;
 
     /**
@@ -50,7 +61,7 @@ class SolicitudController extends Controller
         $parentescos = Parentesco::all();
 
         $periodoActivo = PeriodoAdministrativo::activo();
-        if (!$periodoActivo) {
+        if (! $periodoActivo) {
             abort(500, 'No existe un periodo administrativo activo.');
         }
 
@@ -61,12 +72,12 @@ class SolicitudController extends Controller
             'varios' => 'solicitudes.permisos_varios',
         ];
 
-        if (!array_key_exists($tipo, $vistas)) {
+        if (! array_key_exists($tipo, $vistas)) {
             abort(404, 'Tipo de solicitud no valido.');
         }
 
         $tipoSolicitud = TipoSolicitud::where('codigo', $tipo)->first();
-        if (!$tipoSolicitud) {
+        if (! $tipoSolicitud) {
             abort(500, 'No existe el tipo base de solicitud configurado.');
         }
 
@@ -100,9 +111,9 @@ class SolicitudController extends Controller
         $usuario = Auth::user();
         $periodoActivo = PeriodoAdministrativo::activo();
 
-        if (!$periodoActivo) {
+        if (! $periodoActivo) {
             return back()->withErrors([
-                'periodo' => 'No existe un periodo administrativo activo.'
+                'periodo' => 'No existe un periodo administrativo activo.',
             ]);
         }
 
@@ -118,9 +129,9 @@ class SolicitudController extends Controller
         $tipoCodigo = $request->tipo_codigo;
         $tipoSolicitud = TipoSolicitud::where('codigo', $tipoCodigo)->first();
 
-        if (!$tipoSolicitud) {
+        if (! $tipoSolicitud) {
             return back()->withErrors([
-                'tipo_codigo' => 'No existe el tipo base de solicitud configurado.'
+                'tipo_codigo' => 'No existe el tipo base de solicitud configurado.',
             ])->withInput();
         }
 
@@ -147,9 +158,9 @@ class SolicitudController extends Controller
             'fecha_hasta.after_or_equal' => 'La fecha de termino debe ser igual o posterior a la fecha de inicio.',
         ]);
 
-        if (!Hash::check($request->password, $usuario->password)) {
+        if (! Hash::check($request->password, $usuario->password)) {
             return back()->withErrors([
-                'password' => 'La contrasena ingresada no coincide con su cuenta.'
+                'password' => 'La contrasena ingresada no coincide con su cuenta.',
             ])->withInput();
         }
 
@@ -158,7 +169,7 @@ class SolicitudController extends Controller
 
         if ($this->rangoTieneDiasNoHabiles($desde, $hasta)) {
             return back()->withErrors([
-                'fecha_desde' => 'El rango seleccionado incluye fines de semana o feriados no permitidos.'
+                'fecha_desde' => 'El rango seleccionado incluye fines de semana o feriados no permitidos.',
             ])->withInput();
         }
 
@@ -177,19 +188,19 @@ class SolicitudController extends Controller
         if ($esMedioDia) {
             if ($tipoCodigo !== self::TIPO_CON_GOCE) {
                 return back()->withErrors([
-                    'dias_solicitados' => 'Solo los permisos con goce pueden solicitarse por medio dia.'
+                    'dias_solicitados' => 'Solo los permisos con goce pueden solicitarse por medio dia.',
                 ])->withInput();
             }
 
-            if (!$desde->isSameDay($hasta)) {
+            if (! $desde->isSameDay($hasta)) {
                 return back()->withErrors([
-                    'fecha_hasta' => 'Un permiso de medio dia debe corresponder a una sola fecha.'
+                    'fecha_hasta' => 'Un permiso de medio dia debe corresponder a una sola fecha.',
                 ])->withInput();
             }
 
-            if (!in_array($jornada, ['manana', 'tarde'], true)) {
+            if (! in_array($jornada, ['manana', 'tarde'], true)) {
                 return back()->withErrors([
-                    'jornada' => 'Debe indicar si el medio dia corresponde a manana o tarde.'
+                    'jornada' => 'Debe indicar si el medio dia corresponde a manana o tarde.',
                 ])->withInput();
             }
 
@@ -200,13 +211,13 @@ class SolicitudController extends Controller
             self::TIPO_DEFUNCION,
         ], true) && $diasSolicitados !== (float) $diasHabilesRango) {
             return back()->withErrors([
-                'dias_solicitados' => 'La cantidad de dias debe coincidir con los dias habiles del rango seleccionado.'
+                'dias_solicitados' => 'La cantidad de dias debe coincidir con los dias habiles del rango seleccionado.',
             ])->withInput();
         }
 
-        if ($tipoCodigo === self::TIPO_CON_GOCE && !$esMedioDia && floor($diasSolicitados) !== $diasSolicitados) {
+        if ($tipoCodigo === self::TIPO_CON_GOCE && ! $esMedioDia && floor($diasSolicitados) !== $diasSolicitados) {
             return back()->withErrors([
-                'dias_solicitados' => 'Los permisos con goce solo permiten dias completos o medio dia.'
+                'dias_solicitados' => 'Los permisos con goce solo permiten dias completos o medio dia.',
             ])->withInput();
         }
 
@@ -215,34 +226,34 @@ class SolicitudController extends Controller
 
             if ($diasSolicitados > $diasDisponibles) {
                 return back()->withErrors([
-                    'dias_solicitados' => 'La solicitud excede los dias administrativos disponibles para este ano.'
+                    'dias_solicitados' => 'La solicitud excede los dias administrativos disponibles para este ano.',
                 ])->withInput();
             }
         }
 
         $jefe = $usuario->jefeDirecto;
 
-        if (!$jefe || strtolower($jefe->rol?->nombre ?? '') !== 'jefe_directo') {
-            $jefe = \App\Models\User::whereHas('rol', function ($query) {
+        if (! $this->esJefaturaActiva($jefe)) {
+            $jefe = User::where('activo', true)->whereHas('rol', function ($query) {
                 $query->where('nombre', 'jefe_directo');
             })->first();
         }
 
-        if (!$jefe) {
+        if (! $jefe) {
             return back()->withErrors([
-                'jefe_directo' => 'No hay un director configurado para autorizar esta solicitud.'
+                'jefe_directo' => 'No hay un director configurado para autorizar esta solicitud.',
             ])->withInput();
         }
 
         $estadoPendienteId = EstadoSolicitud::where('codigo', self::ESTADO_PENDIENTE)->value('id');
 
-        if (!$estadoPendienteId) {
+        if (! $estadoPendienteId) {
             return back()->withErrors([
-                'estado_solicitud_id' => 'No existe el estado base pendiente configurado.'
+                'estado_solicitud_id' => 'No existe el estado base pendiente configurado.',
             ])->withInput();
         }
 
-        $solicitud = Solicitud::create([
+        $datosSolicitud = [
             'user_id' => $usuario->id,
             'periodo_id' => $periodoActivo->id,
             'validador_id' => $jefe->id,
@@ -259,16 +270,25 @@ class SolicitudController extends Controller
             'tipo_vario_id' => $request->tipo_vario_id,
             'fecha_envio' => now(),
             'token_validacion' => Str::uuid(),
-        ]);
+        ];
 
-        AuditoriaHelper::registrar(
-            'solicitudes',
-            $solicitud->id,
-            'solicitud_creada',
-            Auth::user()->id,
-            null,
-            $solicitud->toArray()
-        );
+        $solicitud = DB::transaction(function () use ($datosSolicitud, $usuario): Solicitud {
+            $solicitud = Solicitud::create($datosSolicitud);
+
+            AuditoriaHelper::registrar(
+                'solicitudes',
+                $solicitud->id,
+                'solicitud_creada',
+                $usuario->id,
+                null,
+                $solicitud->toArray()
+            );
+
+            return $solicitud;
+        }, 3);
+
+        NotificacionSegura::enviar($usuario, new SolicitudCreadaSolicitante($solicitud));
+        NotificacionSegura::enviar($jefe, new SolicitudCreadaJefeDirecto($solicitud));
 
         return redirect()->route('solicitudes.index')
             ->with('success', 'Solicitud enviada correctamente.');
@@ -297,7 +317,7 @@ class SolicitudController extends Controller
 
         $solicitud->load(['usuario', 'validador', 'tipo', 'estado', 'ultimaResolucion', 'restauraciones.usuario']);
 
-        if (!$this->puedeVerSolicitud($user, $solicitud)) {
+        if (! $this->puedeVerSolicitud($user, $solicitud)) {
             abort(403, 'No tienes permiso para imprimir esta ficha.');
         }
 
@@ -305,7 +325,7 @@ class SolicitudController extends Controller
             'solicitud' => $solicitud,
         ])->setPaper('letter');
 
-        return $pdf->stream('permiso_' . $solicitud->id . '.pdf');
+        return $pdf->stream('permiso_'.$solicitud->id.'.pdf');
     }
 
     private function puedeVerSolicitud($usuario, Solicitud $solicitud): bool
@@ -328,11 +348,18 @@ class SolicitudController extends Controller
             || (int) ($solicitud->validador_id ?? 0) === (int) $usuario->id;
     }
 
+    private function esJefaturaActiva(?User $usuario): bool
+    {
+        return $usuario !== null
+            && $usuario->activo
+            && strtolower($usuario->rol?->nombre ?? '') === 'jefe_directo';
+    }
+
     private function obtenerDiasDisponiblesConGoce(int $userId, int $periodoId): float
     {
         $tipoConGoceId = TipoSolicitud::where('codigo', self::TIPO_CON_GOCE)->value('id');
 
-        if (!$tipoConGoceId) {
+        if (! $tipoConGoceId) {
             return self::TOTAL_DIAS_CON_GOCE;
         }
 
@@ -362,7 +389,7 @@ class SolicitudController extends Controller
         $fecha = $desde->copy();
 
         while ($fecha->lte($hasta)) {
-            if (!$fecha->isWeekend() && !in_array($fecha->toDateString(), $feriados, true)) {
+            if (! $fecha->isWeekend() && ! in_array($fecha->toDateString(), $feriados, true)) {
                 $contador++;
             }
 

@@ -62,6 +62,7 @@ class PermissionOperationIntegrityTest extends TestCase
 
         $response = $this->actingAs($jefe)->post(route('resoluciones.update', $solicitud), [
             'accion' => 'rechazado',
+            'comentario' => 'Segundo intento no permitido.',
         ]);
 
         $response->assertSessionHasErrors('solicitud');

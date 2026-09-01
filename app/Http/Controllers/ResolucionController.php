@@ -6,9 +6,12 @@ use App\Helpers\AuditoriaHelper;
 use App\Models\EstadoSolicitud;
 use App\Models\Resolucion;
 use App\Models\Solicitud;
+use App\Notifications\SolicitudResueltaSolicitante;
+use App\Support\NotificacionSegura;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class ResolucionController extends Controller
@@ -56,7 +59,14 @@ class ResolucionController extends Controller
 
         $validated = $request->validate([
             'accion' => 'required|in:aprobado,rechazado',
-            'comentario' => 'nullable|string|max:1000',
+            'comentario' => [
+                Rule::requiredIf($request->input('accion') === 'rechazado'),
+                'nullable',
+                'string',
+                'max:1000',
+            ],
+        ], [
+            'comentario.required' => 'Debe indicar el motivo del rechazo.',
         ]);
 
         $estadoNombre = $validated['accion'] === 'aprobado'
@@ -69,7 +79,7 @@ class ResolucionController extends Controller
             abort(500, 'No se encontro el estado de solicitud requerido.');
         }
 
-        DB::transaction(function () use ($id, $estadoId, $usuarioActualId, $validated): void {
+        $solicitud = DB::transaction(function () use ($id, $estadoId, $usuarioActualId, $validated): Solicitud {
             $solicitud = Solicitud::with(['estado', 'usuario'])
                 ->lockForUpdate()
                 ->findOrFail($id);
@@ -109,7 +119,15 @@ class ResolucionController extends Controller
                 $oldData,
                 $solicitud->fresh()->toArray()
             );
+
+            return $solicitud;
         }, 3);
+
+        NotificacionSegura::enviar($solicitud->usuario, new SolicitudResueltaSolicitante(
+            $solicitud,
+            $validated['accion'],
+            $validated['comentario'] ?? null
+        ));
 
         return back()->with('success', 'Resolucion registrada correctamente.');
     }

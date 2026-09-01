@@ -8,6 +8,8 @@ use App\Models\EstadoSolicitud;
 use App\Models\RestauracionPermiso;
 use App\Models\Solicitud;
 use App\Models\TipoSolicitud;
+use App\Notifications\DiasRestauradosSolicitante;
+use App\Support\NotificacionSegura;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -52,7 +54,7 @@ class RestauracionPermisoController extends Controller
             'dias_restaurados.multiple_of' => 'Los dias a restaurar deben indicarse en incrementos de 0.5.',
         ]);
 
-        DB::transaction(function () use ($validated, $usuarioActualId): void {
+        $restauracion = DB::transaction(function () use ($validated, $usuarioActualId): RestauracionPermiso {
             $solicitud = Solicitud::query()
                 ->where('id', $validated['solicitud_id'])
                 ->whereHas('tipo', fn ($q) => $q->where('codigo', self::TIPO_CON_GOCE))
@@ -103,7 +105,14 @@ class RestauracionPermisoController extends Controller
                 null,
                 $restauracion->toArray()
             );
+
+            return $restauracion;
         }, 3);
+
+        NotificacionSegura::enviar(
+            $restauracion->solicitud->usuario,
+            new DiasRestauradosSolicitante($restauracion)
+        );
 
         return redirect()->route('admin.restauraciones.index')
             ->with('success', 'Restauracion registrada correctamente.');

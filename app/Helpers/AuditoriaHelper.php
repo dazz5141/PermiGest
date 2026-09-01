@@ -30,6 +30,7 @@ class AuditoriaHelper
             'solicitud_aprobada' => 'Solicitud aprobada',
             'solicitud_rechazada' => 'Solicitud rechazada',
             'solicitud_restaurada' => 'Solicitud restaurada',
+            'recordatorio_solicitud_pendiente' => 'Recordatorio de solicitud pendiente',
             'usuario_creado' => 'Usuario creado',
             'usuario_actualizado' => 'Usuario actualizado',
             'usuario_eliminado' => 'Usuario eliminado',

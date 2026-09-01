@@ -6,6 +6,8 @@ use App\Helpers\AuditoriaHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Rol;
 use App\Models\User;
+use App\Notifications\ContrasenaRestablecidaUsuario;
+use App\Support\NotificacionSegura;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -170,6 +172,8 @@ class UsuarioController extends Controller
 
             AuditoriaHelper::registrar('users', $usuario->id, 'usuario_password_restablecida', Auth::user()->id, $oldData, ['password' => 'encrypted']);
         });
+
+        NotificacionSegura::enviar($usuario, new ContrasenaRestablecidaUsuario);
 
         return redirect()->route('admin.usuarios.index')->with('success', 'Contrasena restablecida correctamente.');
     }

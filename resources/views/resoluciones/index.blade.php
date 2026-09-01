@@ -108,7 +108,7 @@
                 <div class="modal-body">
                     <input type="hidden" name="accion" id="accionInput">
                     <div class="mb-3">
-                        <label for="comentario" class="form-label fw-semibold">Comentario (opcional)</label>
+                        <label for="comentario" class="form-label fw-semibold" id="comentarioLabel">Comentario (opcional)</label>
                         <textarea class="form-control" id="comentario" name="comentario" rows="4"
                             placeholder="Escriba observaciones o fundamentos de su decisión..."></textarea>
                     </div>
@@ -135,13 +135,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('modalResolucion');
     const form = document.getElementById('formResolucion');
     const accionInput = document.getElementById('accionInput');
+    const comentario = document.getElementById('comentario');
+    const comentarioLabel = document.getElementById('comentarioLabel');
 
     modal.addEventListener('show.bs.modal', event => {
         const button = event.relatedTarget;
         const id = button.getAttribute('data-id');
         const accion = button.getAttribute('data-accion');
+        const esRechazo = accion === 'rechazado';
         accionInput.value = accion;
         form.action = `/resoluciones/${id}`;
+        comentario.required = esRechazo;
+        comentario.value = '';
+        comentarioLabel.textContent = esRechazo ? 'Motivo del rechazo *' : 'Comentario (opcional)';
+        comentario.placeholder = esRechazo
+            ? 'Indique el motivo del rechazo...'
+            : 'Escriba observaciones de su decision...';
     });
 });
 </script>
